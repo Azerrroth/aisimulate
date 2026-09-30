@@ -14,7 +14,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .afd_artifacts import write_afd_qualification_artifacts
-from .cli_args import _apply_overrides, _CliConfigError, _load_mapping, build_parser
+from .cli_args import _apply_overrides, _CliConfigError, _extract_output_configs, _load_mapping, build_parser
 from .compiler import prediction_to_replay_spec
 from .config.cli import (
     CorePredictionConfig,
@@ -39,6 +39,12 @@ from .output import (
     write_recommendation_result,
     write_recommendations,
     write_requests,
+)
+from .output_adapter import (
+    OutputAdapterExecutionError,
+    OutputAdapterResolutionError,
+    resolve_output_adapters,
+    write_output_adapters,
 )
 from .power import normalize_power_summary
 from .resources import (
@@ -218,6 +224,8 @@ def _predict(args: argparse.Namespace, raw: dict[str, Any], factory) -> int:
 def _recommend(args: argparse.Namespace, raw: dict[str, Any], factory) -> int:
     from .recommend import run_recommendation
 
+    raw, output_configs = _extract_output_configs(raw, getattr(args, "outputs", []), stack=args.stack)
+    output_adapters = resolve_output_adapters(output_configs)
     core_raw, adapter_raw = split_config_sections(raw, command="recommend")
     config = CoreRecommendationConfig.model_validate(core_raw)
     adapters = _resolve_section_adapters(adapter_raw, args.stack)
@@ -227,6 +235,7 @@ def _recommend(args: argparse.Namespace, raw: dict[str, Any], factory) -> int:
         stack=args.stack,
         runner_factory=factory,
         providers=adapters,
+        output_configs=output_configs,
         show_progress=args.format == "table",
     )
     selected: list[tuple[str, Any, dict[str, Any]]] = []
@@ -268,6 +277,15 @@ def _recommend(args: argparse.Namespace, raw: dict[str, Any], factory) -> int:
         sys.stderr.write(f"no feasible candidate found; saved full result to: {result_path}\n")
         return 3 if getattr(result.counts, "resource_limited", 0) else 1
     paths = write_recommendations(root, [config for _, _, config in selected])
+    try:
+        write_output_adapters(
+            output_adapters,
+            output_configs,
+            result=result,
+            output_dir=root,
+        )
+    except OutputAdapterExecutionError as exc:
+        raise _CliExecutionError(str(exc)) from exc
     rows = []
     for index, ((_, candidate, _), path) in enumerate(zip(selected, paths, strict=True), start=1):
         row = {
@@ -329,6 +347,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (
         _CliConfigError,
         ConfigAdapterResolutionError,
+        OutputAdapterResolutionError,
         ValidationError,
         ValueError,
     ) as exc:

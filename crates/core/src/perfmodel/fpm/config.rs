@@ -241,6 +241,7 @@ impl ForwardPassPerfModelConfig {
     /// adding transient registry facts to the serialized request.
     pub(crate) fn resolve_with_registration(mut self) -> Result<(Self, Option<bool>), AicError> {
         self.resolve_prefill_graph_profile()?;
+        self.estimator_config.resolve_defaults();
         self.validate()?;
         let registered = if self.fpm_profile.is_some() {
             self.estimator_config
@@ -549,6 +550,44 @@ mod tests {
             .unwrap()
             .extend(value.as_object().unwrap().clone());
         serde_json::from_value(base).unwrap()
+    }
+
+    #[test]
+    fn config_resolution_preserves_spline_defaults_and_registration_contract() {
+        use super::super::estimator::{SplineFitConfig, SplineSearchConfig};
+
+        for (fit, expected) in [
+            (
+                serde_json::json!({"kind": "spline"}),
+                SplineFitConfig::default(),
+            ),
+            (
+                serde_json::json!({"kind": "spline", "spline": {
+                    "search": {"kind": "periodic", "step": 17}
+                }}),
+                SplineFitConfig {
+                    knots_per_axis: 2,
+                    search: SplineSearchConfig::periodic(17),
+                },
+            ),
+        ] {
+            let cfg = config(serde_json::json!({
+                "estimation_mode": "fpm_regression", "estimator_config": {"fpm_regression": {"fit": fit}}
+            }));
+            let normalized = cfg.clone().resolve().unwrap();
+            let (with_registration, registered) = cfg.resolve_with_registration().unwrap();
+            assert_eq!(normalized, with_registration);
+            assert_eq!(registered, None);
+            assert_eq!(
+                normalized.estimator_config.fpm_regression.fit.spline,
+                Some(expected)
+            );
+            let reloaded: ForwardPassPerfModelConfig =
+                serde_json::from_str(&serde_json::to_string(&normalized).unwrap()).unwrap();
+            assert_eq!(reloaded.resolve().unwrap(), normalized);
+        }
+        let linear = config(serde_json::json!({})).resolve().unwrap();
+        assert!(linear.estimator_config.fpm_regression.fit.spline.is_none());
     }
 
     #[test]

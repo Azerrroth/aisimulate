@@ -109,6 +109,16 @@ class ForwardPassPerfModelConfig:
     statistics rebuilding. Omitting it uses the Rust default of ``None``;
     numerical recovery and batch fallbacks remain enabled. An explicit
     positive interval, such as 4096, opts into periodic rebuilding.
+
+    ``fit.kind`` defaults to ``"standardized_nnls"`` (alias ``"linear"``).
+    Set ``{"fpm_regression": {"fit": {"kind": "spline"}}}`` to use learned
+    piecewise-linear fits. Rust fills ``fit.spline`` with two knots per axis
+    and adaptive search defaults: window 16, trigger 8, relative tolerance
+    0.05, absolute tolerance 1 ms, and cooldown 64 accepted observations.
+    For periodic searches, supply ``fit.spline.search`` as
+    ``{"kind": "periodic", "step": 64}``. These controls do not change
+    ``estimation_mode`` selection: request ``"fpm_regression"`` explicitly
+    to require regression.
     """
 
     model: str
@@ -261,6 +271,15 @@ class RustForwardPassPerfModel:
     rebuilds, preserving numerical recovery and batch fallbacks. Set a positive
     interval, such as 4096 mutations, to enable scheduled rebuilds.
 
+    The default linear fit is unchanged. ``fit.kind="spline"`` adds learned
+    knots and a separate accepted-observation search clock per store. Spline
+    coefficients update between searches; a knot search rebuilds their basis.
+    The linear fit uses the same retained samples and supplies predictions
+    during spline startup or outside the retained feature bounds. Spline
+    predictions require an available linear prediction for the same query.
+    Saving the resolved configuration preserves settings, not samples or learned
+    state.
+
     Queued request fields are accepted for schema compatibility but ignored by
     this AIC forward-pass model. ``estimate_forward_pass_time_ms()`` treats FPM
     as a workload descriptor: scheduled request fields are used, while
@@ -355,9 +374,11 @@ class RustForwardPassPerfModel:
         convenience form. Native workload inference and role-bound regression
         feature extraction use only ``scheduled_requests``; queued fields and
         ``wall_time`` are ignored for estimation. Regression models return
-        ``None`` until the selected store has a ready fit. A different store's
-        readiness does not supply a fallback prediction. Empty
-        scheduled work returns ``0.0``.
+        ``None`` until the selected store has a ready linear fit. A different
+        store's readiness does not supply a fallback prediction. Spline
+        predictions also require an available linear prediction for the query;
+        otherwise they return ``None`` even inside retained raw-feature bounds.
+        Empty scheduled work returns ``0.0``.
         """
         return self._inner.estimate_forward_pass_time_ms(_json_dumps(metrics))
 
@@ -407,8 +428,12 @@ class RustForwardPassPerfModel:
 
         Description: return source, readiness, retained sample count, and
         fallback warning. Regression retained count is summed across stores;
-        ``ready`` means at least one store has a ready fit. Consult
+        ``ready`` means at least one store has a ready linear fit, including
+        when spline fitting is selected. Consult
         ``regression_store_diagnostics()`` for individual store readiness.
+        Readiness does not guarantee query coverage: another store may be cold,
+        and spline predictions require an available linear prediction for the
+        same query.
         """
         return json.loads(self._inner.diagnostics())
 
@@ -437,6 +462,19 @@ class RustForwardPassPerfModel:
         order: ``pure_decode``, ``contains_locally_mixed``,
         ``cross_rank_aggregated``, ``pure_prefill``. Dedicated models return
         their single store; native AIC models return an empty list.
+
+        Only spline stores add ``spline`` with ``initialized``, ``ready``,
+        ``accepted_observations``, ``knot_searches``,
+        ``last_search_observation``, ``numerical_rebuilds``, and
+        ``batch_fallbacks``. Store readiness requires the shared linear fit;
+        spline readiness can be false while the store is ready. Conversely,
+        ``spline.ready`` can be true while the shared linear fit is unavailable;
+        the enclosing store then reports ``ready=False`` and returns no
+        prediction, including inside retained raw-feature bounds.
+        The search clock counts accepted observations, separately from the
+        insertion/eviction mutation clock for statistics rebuilding.
+        ``numerical_rebuilds`` includes scheduled and recovery rebuilds within
+        fixed-knot epochs, excluding initialization at knot searches.
         """
         return json.loads(self._inner.regression_store_diagnostics())
 

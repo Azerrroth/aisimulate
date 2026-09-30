@@ -34,6 +34,7 @@ areas:
       - python/aisimulate/
       - python/aisimulate/src/aisimulate/capacity.py
       - tests/test_aic.py
+      - tests/test_spline_estimator_config.py
       - tests/test_fpm_profile_workflow.py
       - tests/test_fpm_grouped_workflow.py
       - tests/test_fpm_query_evidence.py
@@ -187,6 +188,8 @@ shared:
   - glob: python/aisimulate/src/aisimulate/traffic.py
     owners: [replay, maintainers]
   - glob: tests/test_cli_config.py
+    owners: [replay, sweeper, forward-pass-engine, maintainers]
+  - glob: tests/test_spline_estimator_config.py
     owners: [replay, sweeper, forward-pass-engine, maintainers]
   - glob: tests/test_epd_cli.py
     owners: [replay, sweeper, forward-pass-engine, maintainers]

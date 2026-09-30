@@ -50,13 +50,14 @@ pub use fpm::{
     ForwardPassPerfDiagnostics, ForwardPassPerfModel, ForwardPassPerfModelConfig,
     ForwardPassPerfOptions, ForwardPassPerfProvenance, ForwardPassPerfReadiness,
     ForwardPassPerfSource, ForwardPassRegressionStoreDiagnostics,
-    ForwardPassRegressionWorkloadKind, ForwardPassSpeculationConfig, ForwardPassWorkerType,
-    FpmRegressionConfig, RegressionFeatureWeights, SamplingConfig,
+    ForwardPassRegressionWorkloadKind, ForwardPassSpeculationConfig, ForwardPassSplineDiagnostics,
+    ForwardPassWorkerType, FpmRegressionConfig, RegressionFeatureWeights, SamplingConfig,
 };
 pub use fpm::{
     CorrectionFactorBounds, CorrectionFeatureSpace, FpmInterpolationConfig, FpmInterpolationMethod,
     FpmQueryCoverage, FpmQueryCoverageCounts, FpmQueryGap, FpmQueryPurpose, OpLevelConfig,
-    RegressionFitConfig, RegressionFitKind, UnrecordedFpmQuantMode,
+    RegressionFitConfig, RegressionFitKind, SplineFitConfig, SplineSearchConfig,
+    UnrecordedFpmQuantMode,
 };
 pub use fpm::{
     FpmCacheBudget, FpmCacheBudgetAdjusted, FpmCacheBudgetRequest, FpmCacheGroup, FpmCacheKind,

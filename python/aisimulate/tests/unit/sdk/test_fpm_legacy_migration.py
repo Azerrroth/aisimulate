@@ -72,6 +72,68 @@ def test_migration_merges_saved_and_caller_controls_before_round_trip():
     }
 
 
+@pytest.mark.parametrize("options", [None, {"max_observations": 96}])
+@pytest.mark.parametrize(
+    ("spline", "expected"),
+    [
+        (
+            None,
+            {
+                "knots_per_axis": 2,
+                "search": {
+                    "kind": "adaptive",
+                    "window": 16,
+                    "trigger": 8,
+                    "tolerance": 0.05,
+                    "absolute_tolerance_ms": 1.0,
+                    "cooldown": 64,
+                },
+            },
+        ),
+        (
+            {"knots_per_axis": 3, "search": {"kind": "periodic", "step": 17}},
+            {"knots_per_axis": 3, "search": {"kind": "periodic", "step": 17}},
+        ),
+        (
+            {"search": {"kind": "adaptive", "window": 9, "trigger": 3, "tolerance": 0.125}},
+            {
+                "knots_per_axis": 2,
+                "search": {
+                    "kind": "adaptive",
+                    "window": 9,
+                    "trigger": 3,
+                    "tolerance": 0.125,
+                    "absolute_tolerance_ms": 1.0,
+                    "cooldown": 64,
+                },
+            },
+        ),
+    ],
+)
+def test_spline_controls_resolve_during_migration_and_survive_normalized_reload(options, spline, expected):
+    fit = {"kind": "spline", "rebuild_interval": 17}
+    if spline is not None:
+        fit["spline"] = copy.deepcopy(spline)
+    canonical = ForwardPassPerfModelConfig.from_legacy_engine_config(
+        _legacy_config({"fpm_regression": {"fit": fit}}), "decode", options
+    )
+    expected_fit = {
+        "kind": "spline",
+        "singular_ridge_scale": 1e-9,
+        "rebuild_interval": 17,
+        "spline": expected,
+    }
+    # Migration itself emits spline defaults, before full request normalization.
+    assert canonical.estimator_config["fpm_regression"]["fit"] == expected_fit
+    normalized = RustForwardPassPerfModel.normalize_config(_reload(canonical))
+    assert normalized["estimator_config"]["fpm_regression"]["fit"] == expected_fit
+    assert normalized["estimator_config"]["fpm_regression"]["sampling"]["max_observations"] == (
+        64 if options is None else 96
+    )
+    restored = ForwardPassPerfModelConfig(**json.loads(json.dumps(normalized)))
+    assert RustForwardPassPerfModel.normalize_config(restored) == normalized
+
+
 @pytest.mark.parametrize("options", [None, {}, ForwardPassPerfOptions()])
 def test_omitted_caller_fields_do_not_override_saved_controls(options):
     saved = {

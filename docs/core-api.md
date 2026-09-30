@@ -430,9 +430,11 @@ nested paths. The supported namespaces are:
   `ffn_token_weight`, each defaulting to 1.0. These currently affect regression
   only; positive finite values are required when regression is constructed.
 - `fpm_regression`: independent `sampling`, `min_observations` (5), and `fit`.
-  The fit kind is `standardized_nnls`, with a free intercept and nonnegative
-  slopes. `singular_ridge_scale` defaults to `1e-9` and applies only when retrying
-  a singular equation. `rebuild_interval` defaults to JSON `null` / Python
+  The default fit kind is `standardized_nnls` (also accepted as `linear`),
+  with a free intercept and nonnegative slopes. `spline` selects an additive
+  piecewise-linear fit with learned knots and nonnegative segment slopes.
+  `singular_ridge_scale` defaults to `1e-9` and applies to the shared linear
+  fit only when retrying a singular equation. `rebuild_interval` defaults to JSON `null` / Python
   `None`, disabling periodic rebuilding. A positive integer opts into
   rebuilding after that many retained-sample mutations.
 - `correction`: `enabled` (true), independent `sampling`, `min_observations`
@@ -526,10 +528,169 @@ default settings. A shared role-based correction space requires separate
 accuracy validation and is not accepted as a configuration value in this release.
 
 Use `regression_store_diagnostics()` for per-store counts/readiness. Summary
-readiness means at least one store is ready; another cold store can still
-return `None`. `tune_with_fpms()` preserves the established FPM observation
-contract. Native construction still uses Python model compilation; estimator
-selection, regression, correction, and latency computation are owned by Rust.
+readiness means at least one store has a usable linear fit, including when
+spline fitting is selected; another cold store can still return `None`.
+Readiness does not guarantee coverage for every query: spline predictions require
+an available linear prediction for the same query. `tune_with_fpms()` preserves
+the established FPM observation contract. Native construction still uses Python
+model compilation; estimator selection, regression, correction, and latency
+computation are owned by Rust.
+
+### Selecting linear or spline regression
+
+Select the fit within `estimator_config.fpm_regression.fit`. The default remains
+the existing linear model. The alias `linear` normalizes to `standardized_nnls`
+in provenance and saved configuration. Evaluate spline for each deployment before
+enabling it: the MiniMax-M2.7 / H200 / vLLM / TP4 prefix in the
+[2026-09-25 comparison](fpm-recursive-regression.md#production-spline-validation-2026-09-25)
+had 0.87% MAPE with linear, 5.31% with periodic spline, and 1.63% with adaptive
+spline, so improved accuracy on other workloads does not imply a universal gain.
+To select spline regression explicitly:
+
+```python
+config = ForwardPassPerfModelConfig(
+    model="Qwen/Qwen3-32B",
+    system="h200_sxm",
+    backend="vllm",
+    worker_type="decode",
+    estimation_mode="fpm_regression",
+    estimator_config={"fpm_regression": {"fit": {"kind": "spline"}}},
+)
+model = RustForwardPassPerfModel.best_available(config)
+```
+
+The corresponding Rust configuration uses the same canonical constructor and
+public typed controls. For example, two knots per axis with periodic search:
+
+```rust
+use aisimulate_core::{
+    BackendKind, EstimationMode, ForwardPassPerfModel, ForwardPassPerfModelConfig,
+    ForwardPassWorkerType, RegressionFitKind, SplineFitConfig, SplineSearchConfig,
+};
+
+let mut config = ForwardPassPerfModelConfig::new(
+    "Qwen/Qwen3-32B", "h200_sxm", BackendKind::Vllm, ForwardPassWorkerType::Decode,
+);
+config.estimation_mode = EstimationMode::FpmRegression;
+config.estimator_config.fpm_regression.fit.kind = RegressionFitKind::Spline;
+config.estimator_config.fpm_regression.fit.spline = Some(SplineFitConfig {
+    knots_per_axis: 2,
+    search: SplineSearchConfig::periodic(64),
+});
+let model = ForwardPassPerfModel::best_available(config)?;
+```
+
+Rust source compatibility: exhaustive matches on `RegressionFitKind` must now
+handle `RegressionFitKind::Spline`. Existing full `RegressionFitConfig` literals
+for linear fits must add `spline: None`; this type implements `Default`, so
+`..RegressionFitConfig::default()` is also available when its other defaults
+are appropriate. Full `ForwardPassRegressionStoreDiagnostics` literals must
+likewise provide the new `spline` field (`None` for linear stores). That
+diagnostics type does not implement `Default`. Existing serialized linear
+configurations and diagnostics continue to omit `spline` when it is `None`.
+
+The new `SplineSearchConfig` enum, its policy variants, and
+`ForwardPassSplineDiagnostics` are `#[non_exhaustive]` so additional policies or
+fields can be introduced without breaking callers that follow the supported
+construction and matching patterns. Construct search policies with
+`SplineSearchConfig::periodic(step)` or
+`SplineSearchConfig::adaptive(window, trigger, tolerance, absolute_tolerance_ms, cooldown)`.
+These constructors retain the supplied values; the canonical model constructor
+resolves and validates the configuration. External matches need a wildcard arm
+for future policies and `..` when destructuring variant fields. Read spline
+diagnostics returned by the model instead of constructing diagnostic literals;
+destructuring them also requires `..`. JSON/YAML representation and defaults are
+unchanged.
+
+Rust expands omitted spline controls to:
+
+```yaml
+engine:
+  estimation_mode: fpm_regression
+  estimator_config:
+    fpm_regression:
+      fit:
+        kind: spline
+        spline:
+          knots_per_axis: 2
+          search:
+            kind: adaptive
+            window: 16
+            trigger: 8
+            tolerance: 0.05
+            absolute_tolerance_ms: 1.0
+            cooldown: 64
+```
+
+This YAML is the estimator portion of a prediction/recommendation configuration;
+model, hardware, backend, and workers use the usual engine settings. The same
+nested paths work with CLI `--set`. Role-specific
+`engine.workers.<role>.timing.estimator_config` replaces the global dictionary
+for that role, so include every desired control in the role override.
+
+`knots_per_axis` accepts 2 or 3. Constant or sparsely sampled axes may use fewer
+distinct knots. To use periodic searches, replace the entire `search` object:
+
+```yaml
+search:
+  kind: periodic
+  step: 64
+```
+
+`step`, `window`, `trigger`, and `cooldown` are positive integers; `trigger` must
+not exceed `window`. `tolerance` is a positive finite relative error (0.05 means
+5%), and `absolute_tolerance_ms` is finite and nonnegative. Policy-specific fields
+cannot be mixed. A `spline` block with a linear fit is rejected. Spline fitting
+requires `sampling.max_observations >= 32` and the existing capacity/minimum
+observation consistency checks still apply.
+
+Each store first searches after `max(32, min_observations)` accepted observations,
+provided it retains at least `min_observations` samples. Before that, a usable
+linear fit supplies predictions, starting at the usual minimum of five samples.
+With default settings, the first search occurs at observation 32. Periodic
+searches then occur at accepted-count multiples of `step`: 64, 128, and so on.
+Adaptive search requires at least `trigger` excessive errors in the latest
+`window` monitored observations and at least `cooldown` accepted observations
+since the previous search. The default earliest second search is observation 96.
+
+Adaptive errors use the raw, unclamped spline prediction before consuming the
+new target and before the range guard below. An error is excessive when its
+absolute value exceeds `max(absolute_tolerance_ms, tolerance * observed_ms)`. Monitoring includes
+points outside the retained range; the window resets after each search. A full
+window is not required, and the current observation need not itself have an
+excessive error once the rolling count and cooldown conditions are satisfied.
+Prediction queries and rejected observations do not advance the search clock. Coefficients
+continue updating between searches as retained samples are inserted or evicted.
+
+The spline is used only within the current retained samples' raw-feature bounds
+and only when the linear fit can predict the same query. Outside that box, or
+while the spline is unready, the model uses the linear fit trained on the same
+retained observations. Both paths keep the positive prediction floor. If the
+linear prediction is unavailable, the query returns `None`, even if a spline
+prediction is available inside retained bounds. This guard preserves the shared
+linear fit's prediction coverage and limits extrapolation; it does not guarantee
+accuracy on unseen workloads. The fit is additive across the two axes, without
+interaction terms.
+
+`regression_store_diagnostics()` adds a `spline` object only for spline stores:
+`initialized`, `ready`, `accepted_observations`, `knot_searches`,
+`last_search_observation`, `numerical_rebuilds`, and `batch_fallbacks`.
+The enclosing store is ready only when its shared linear fit is usable.
+It can be ready while `spline.ready` is false, using linear predictions during
+spline warmup or numerical unavailability. Conversely, `spline.ready` can be
+true while the enclosing store reports `ready: false`; no predictions are served
+until the shared linear fit is usable again. Spline component readiness describes
+its fit, independently of the guard applied to serving.
+`initialized` records that an initial search has run, even if its fit
+is unready. Search counts are separate from statistics rebuild/fallback counts.
+`numerical_rebuilds` includes configured periodic rebuilds and numerical recovery
+within fixed-knot epochs; initializing statistics for a new knot search is excluded.
+
+Saved configuration preserves the resolved policy and controls, but not learned
+knots, samples, or counters: constructing from it starts a cold model. CLI,
+Sweeper, and Replay transport the settings; they still reject cold regression
+for offline simulation. Setting `fit.kind: spline` does not change `auto`'s
+estimator priority; use `estimation_mode: fpm_regression` to require regression.
 
 ### Direct-FPM query coverage
 
@@ -597,11 +758,14 @@ for the stricter whole-corpus completion checks and saved onboarding artifacts.
 
 ### Recursive regression and statistics rebuilding
 
-Regression maintains centered sufficient statistics for the retained samples
-and applies the existing standardized nonnegative least-squares fit. The
+Linear regression maintains centered sufficient statistics for the retained
+samples and applies the existing standardized nonnegative least-squares fit. The
 objective and readiness rules stay the same. The retention grid still controls
 which samples are kept; it does not create separate fitted planes within a
-workload store.
+workload store. Spline regression maintains statistics in its current basis and
+rebuilds them when knot positions change. Its knot-search policy and
+`rebuild_interval` are separate controls. Knot relocation resets the spline's
+fixed-basis mutation clock but does not reset the linear fit's rebuild clock.
 
 See the [recursive regression walkthrough](fpm-recursive-regression.md) for
 the update equations, numerical guards, and measured fitting costs.

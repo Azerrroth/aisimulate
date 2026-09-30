@@ -10,7 +10,8 @@ use std::path::Path;
 use aisimulate_core::{
     AicEngine, AicEngineBuilder, AicError, BackendKind, DatabaseMode, EstimationMode,
     EstimatorConfig, ForwardPassPerfModel, ForwardPassPerfModelConfig,
-    ForwardPassRegressionStoreDiagnostics, ForwardPassWorkerType, KvCacheEstimateRequest,
+    ForwardPassRegressionStoreDiagnostics, ForwardPassWorkerType, FpmInterpolationMethod,
+    KvCacheEstimateRequest,
 };
 
 /// Compile the ergonomic engine builder without starting embedded Python.
@@ -71,6 +72,14 @@ pub fn regression_options() -> EstimatorConfig {
     config
 }
 
+/// Independent profile and interpolation method use the one construction API.
+pub fn profile_model(
+    mut config: ForwardPassPerfModelConfig,
+) -> Result<ForwardPassPerfModel, AicError> {
+    config.estimator_config.fpm_interpolation.method = FpmInterpolationMethod::Direct;
+    ForwardPassPerfModel::best_available(config)
+}
+
 pub fn best_available_model(
     config: ForwardPassPerfModelConfig,
 ) -> Result<ForwardPassPerfModel, AicError> {
@@ -105,9 +114,9 @@ pub fn accept_kv_request(request: KvCacheEstimateRequest) -> KvCacheEstimateRequ
 mod tests {
     use super::*;
     use aisimulate_core::{
-        ForwardPassMetrics, ForwardPassRegressionWorkloadKind, TimingEvidenceSource,
-        TimingEvidenceSummary, TimingOperationEvidence, TimingPhaseEvidence,
-        ENGINE_CONFIG_SCHEMA_VERSION, ENGINE_SPEC_SCHEMA_VERSION, FPM_VERSION,
+        ENGINE_CONFIG_SCHEMA_VERSION, ENGINE_SPEC_SCHEMA_VERSION, FPM_VERSION, ForwardPassMetrics,
+        ForwardPassRegressionWorkloadKind, TimingEvidenceSource, TimingEvidenceSummary,
+        TimingOperationEvidence, TimingPhaseEvidence,
     };
 
     #[test]
@@ -146,7 +155,8 @@ mod tests {
         // v22: observed MoE selection and exact prefill graph composites.
         // v23: ParallelMapping gained optional recorded DCP identity.
         // v24: FpmForwardOp carries typed DCP separately from matching strings.
-        assert_eq!(ENGINE_SPEC_SCHEMA_VERSION, 24);
+        // v25: SOL/direct interpolation selector combined with typed DCP.
+        assert_eq!(ENGINE_SPEC_SCHEMA_VERSION, 25);
         assert_eq!(FPM_VERSION, 1);
         assert_eq!(ForwardPassMetrics::default().version, FPM_VERSION);
     }
@@ -263,9 +273,11 @@ mod tests {
             stores[0].workload_kind,
             ForwardPassRegressionWorkloadKind::PureDecode
         );
-        assert!(stores
-            .iter()
-            .all(|store| !store.ready && store.retained_observations == 0));
+        assert!(
+            stores
+                .iter()
+                .all(|store| !store.ready && store.retained_observations == 0)
+        );
         let _roles = [
             ForwardPassWorkerType::Prefill,
             ForwardPassWorkerType::Decode,

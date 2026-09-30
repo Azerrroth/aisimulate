@@ -402,6 +402,7 @@ mod tests {
         let mut manager =
             G1Manager::new_with_event_sink(8, 4, KvEventPublishers::new(Some(sink)), 0);
         let (mut sequence, identities) = RequestSequence::new(
+            owner,
             (0..8).collect(),
             4,
             4,

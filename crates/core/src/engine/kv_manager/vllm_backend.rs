@@ -1747,7 +1747,8 @@ mod tests {
         emit_token_ids: bool,
     ) -> (RequestSequence, BlockRequestLease) {
         let tokens = (0..hashes.len() * 4).map(|token| token as u32).collect();
-        let (sequence, _) = RequestSequence::new(tokens, 0, 0, 4, true, true, emit_token_ids, None);
+        let (sequence, _) =
+            RequestSequence::new(owner, tokens, 0, 0, 4, true, true, emit_token_ids, None);
         let identities = hashes
             .iter()
             .copied()
@@ -1986,8 +1987,17 @@ mod tests {
         // blocks plus one partial tail occupy four physical blocks.
         let first = Uuid::from_u128(1);
         let first_tokens = (0..15).collect::<Vec<u32>>();
-        let (mut first_sequence, first_identities) =
-            RequestSequence::new(first_tokens, 2, 2, 4, true, true, false, Some(vec![15, 16]));
+        let (mut first_sequence, first_identities) = RequestSequence::new(
+            first,
+            first_tokens,
+            2,
+            2,
+            4,
+            true,
+            true,
+            false,
+            Some(vec![15, 16]),
+        );
         let mut first_lease = BlockRequestLease::new(first, first_identities);
         ready(manager.allocate_lease(first, &mut first_lease, 15, 0));
         manager.finalize_lease_computed_prefix(first, &mut first_sequence, &mut first_lease, 0, 15);
@@ -2032,7 +2042,7 @@ mod tests {
         let mut second_tokens = (0..10).collect::<Vec<u32>>();
         second_tokens.extend([100, 101, 102, 103]);
         let (mut second_sequence, second_identities) =
-            RequestSequence::new(second_tokens, 0, 0, 4, true, true, false, None);
+            RequestSequence::new(second, second_tokens, 0, 0, 4, true, true, false, None);
         let mut second_lease = BlockRequestLease::new(second, second_identities);
         let prefill = manager.get_lease_prefill_cost(&second_sequence, &second_lease);
         assert_eq!(prefill.cached_tokens, 8);

@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-import aiconfigurator_core
-from aiconfigurator.cli.api import cli_estimate
+import aisimulate_core
+from aisimulate.legacy_cli.api import cli_estimate
 
 pytestmark = [pytest.mark.integration, pytest.mark.gpu_0, pytest.mark.pre_merge]
 
@@ -51,7 +51,7 @@ def test_baseline_manifest_is_complete():
 @pytest.fixture(scope="module")
 def frozen_inputs():
     """Fail closed if model or performance data no longer matches the baseline."""
-    root = Path(aiconfigurator_core.__file__).parent
+    root = Path(aisimulate_core.__file__).parent
     data_files = {str(path.relative_to(root)) for path in (root / "systems/data/h200_sxm").rglob("*") if path.is_file()}
     expected_data_files = {path for path in _BASELINE["input_sha256"] if path.startswith("systems/data/h200_sxm/")}
     assert data_files == expected_data_files, "H200 database file inventory changed"
@@ -65,7 +65,12 @@ def frozen_inputs():
 @pytest.mark.parametrize("case", _BASELINE["cases"], ids=lambda case: case["id"])
 def test_afd_estimate_matches_frozen_target(case, frozen_inputs, tmp_path, caplog):
     query = {**_BASELINE["query"], **case["overrides"]}
-    evidence = {"id": case["id"], "query": query, "baseline_commit": _BASELINE["commit"]}
+    evidence = {
+        "id": case["id"],
+        "query": query,
+        "baseline_commit": _BASELINE["commit"],
+        "input_commit": _BASELINE["input_commit"],
+    }
     try:
         if "error" in case:
             expected = case["error"]

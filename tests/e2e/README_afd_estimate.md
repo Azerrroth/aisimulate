@@ -1,7 +1,7 @@
 # AFD estimate regression
 
 This CPU-only suite runs fixed queries through the real
-`aiconfigurator.cli.api.cli_estimate` entry point and compares public latency
+`aisimulate.legacy_cli.api.cli_estimate` entry point and compares public latency
 outputs to frozen targets. It uses the native runtime and bundled performance
 database without mocking estimator results.
 
@@ -16,7 +16,7 @@ python/aisimulate/.venv/bin/python -m pytest -p no:timeout \
 
 Use a dedicated `--basetemp` directory: pytest clears it on each run. Each
 executed query writes a JSON record there with the resolved query, baseline
-commit, target, actual, signed difference, relative difference, path outputs,
+commit, input commit, target, actual, signed difference, relative difference, path outputs,
 and captured logs. Pytest reports preflight failures separately.
 
 ## Configuration and coverage
@@ -62,3 +62,20 @@ The repository Full CI contracts shard scans root `tests/`, so this suite is
 eligible for collection once committed. Dedicated persistence of the per-case
 JSON files is not configured here. The baseline records the capture Python
 version but does not enforce a complete dependency or runtime fingerprint.
+
+## Upstream compatibility refresh
+
+The suite is rebased onto upstream `cab77b9c7888b1c40df8cd3228f5e03c355ef23c`.
+Imports use the renamed `aisimulate_core` package and the retained
+`aisimulate.legacy_cli.api.cli_estimate` entry point. This suite continues to
+exercise that analytical AFD API.
+
+`commit` preserves the original numerical-target provenance;
+`input_commit` records the revision used for the refreshed input fingerprints.
+No numerical targets, path expectations, error expectations or query settings
+were changed during this refresh. The H200 inventory gained 36 files and lost
+two FPM files; seven retained inputs changed (system YAML and GEMM/MLA data
+or metadata). All 204 current input files remain fingerprinted.
+
+Validation on the refreshed inputs: 10 tests passed on Python 3.13.7,
+including all seven numerical cases and both rejection cases.

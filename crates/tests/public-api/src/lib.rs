@@ -127,9 +127,9 @@ pub fn accept_kv_request(request: KvCacheEstimateRequest) -> KvCacheEstimateRequ
 mod tests {
     use super::*;
     use aisimulate_core::{
-        ForwardPassMetrics, ForwardPassRegressionWorkloadKind, TimingEvidenceSource,
-        TimingEvidenceSummary, TimingOperationEvidence, TimingPhaseEvidence,
-        ENGINE_CONFIG_SCHEMA_VERSION, ENGINE_SPEC_SCHEMA_VERSION, FPM_VERSION,
+        ENGINE_CONFIG_SCHEMA_VERSION, ENGINE_SPEC_SCHEMA_VERSION, FPM_VERSION, ForwardPassMetrics,
+        ForwardPassRegressionWorkloadKind, TimingEvidenceSource, TimingEvidenceSummary,
+        TimingOperationEvidence, TimingPhaseEvidence,
     };
 
     #[test]
@@ -193,11 +193,13 @@ mod tests {
         config.estimator_config = controls;
         // Auto/default correction cannot admit a direct-only graph profile.
         // This fails before Python/model/system lookup despite nonexistent data.
-        assert!(ForwardPassPerfModel::best_available(config)
-            .err()
-            .unwrap()
-            .to_string()
-            .contains("requires explicit"));
+        assert!(
+            ForwardPassPerfModel::best_available(config)
+                .err()
+                .unwrap()
+                .to_string()
+                .contains("requires explicit")
+        );
     }
 
     struct LatencyOnlyProvider;
@@ -286,9 +288,11 @@ mod tests {
             stores[0].workload_kind,
             ForwardPassRegressionWorkloadKind::PureDecode
         );
-        assert!(stores
-            .iter()
-            .all(|store| !store.ready && store.retained_observations == 0));
+        assert!(
+            stores
+                .iter()
+                .all(|store| !store.ready && store.retained_observations == 0)
+        );
         let _roles = [
             ForwardPassWorkerType::Prefill,
             ForwardPassWorkerType::Decode,
@@ -321,6 +325,31 @@ mod tests {
                 rebuild_interval: interval,
                 ..RegressionFitConfig::default()
             };
+            use aisimulate_core::{
+                LinearFitConfig, RegressionFeatureAxis, RegressionSamplingConfig,
+                RegressionUpdatePolicy,
+            };
+            config.estimator_config.fpm_regression.sampling = RegressionSamplingConfig {
+                axes: vec![RegressionFeatureAxis::Count],
+                bins_per_axis: vec![8],
+                max_observations: 64,
+            };
+            config.estimator_config.fpm_regression.fit.linear = Some(LinearFitConfig {
+                feature_axes: vec![
+                    RegressionFeatureAxis::Attention,
+                    RegressionFeatureAxis::Moe,
+                    RegressionFeatureAxis::Count,
+                ],
+                non_negative: false,
+                update_policy: RegressionUpdatePolicy::ErrorThreshold {
+                    relative_tolerance: 0.05,
+                    absolute_tolerance_ms: 0.1,
+                    window: 8,
+                    trigger: 2,
+                    cooldown: 4,
+                    startup_observations: 10,
+                },
+            });
             let model = ForwardPassPerfModel::best_available(config).unwrap();
             let resolved = &model.provenance().unwrap().config;
             assert_eq!(
@@ -356,9 +385,11 @@ mod tests {
                 .err()
                 .expect("zero interval must fail");
             assert!(matches!(error, AicError::InvalidEngineConfig(_)));
-            assert!(error
-                .to_string()
-                .contains("estimator_config.fpm_regression.fit.rebuild_interval"));
+            assert!(
+                error
+                    .to_string()
+                    .contains("estimator_config.fpm_regression.fit.rebuild_interval")
+            );
         }
     }
 
@@ -497,9 +528,11 @@ mod tests {
                 });
                 let error = ForwardPassPerfModel::best_available(config).err().unwrap();
                 assert!(matches!(error, AicError::InvalidEngineConfig(_)));
-                assert!(error
-                    .to_string()
-                    .contains(&format!("fit.spline.search.{path}")));
+                assert!(
+                    error
+                        .to_string()
+                        .contains(&format!("fit.spline.search.{path}"))
+                );
             }
         }
     }
@@ -507,9 +540,9 @@ mod tests {
     #[test]
     fn agentic_snapshot_preparation_and_execution_are_public() {
         use aisimulate_core::replay::loadgen::{
-            AgenticGraphBuilder, AgenticHashIdScope, AgenticMooncakeHeader, AgenticMooncakeRow,
-            AgenticSnapshotOptions, AgenticSourceProvenance, PreparedAgenticSnapshots,
-            WorkloadDriver, AGENTIC_MOONCAKE_SCHEMA, AGENTIC_MOONCAKE_VERSION,
+            AGENTIC_MOONCAKE_SCHEMA, AGENTIC_MOONCAKE_VERSION, AgenticGraphBuilder,
+            AgenticHashIdScope, AgenticMooncakeHeader, AgenticMooncakeRow, AgenticSnapshotOptions,
+            AgenticSourceProvenance, PreparedAgenticSnapshots, WorkloadDriver,
         };
 
         let mut builder = AgenticGraphBuilder::new(AgenticMooncakeHeader {
@@ -552,11 +585,13 @@ mod tests {
         let first = context.prepare_play_from_start(0, 0).unwrap();
         let recycled = context.prepare_play_from_start(0, 1).unwrap();
         assert_eq!(first.evidence().t_star_ms, 1_000.0);
-        assert!(first
-            .evidence()
-            .requests
-            .iter()
-            .all(|request| !request.historical));
+        assert!(
+            first
+                .evidence()
+                .requests
+                .iter()
+                .all(|request| !request.historical)
+        );
         assert_ne!(first.evidence().cache_id, recycled.evidence().cache_id);
         assert_ne!(
             first.materialize_prefix("before", 128).unwrap(),
@@ -572,10 +607,12 @@ mod tests {
         assert_eq!(phases.lanes[0].primers_expected, 1);
         assert_eq!(phases.lanes[0].warmup_expected, 10);
         assert_eq!(phases.requests[0].source_request_id, "before");
-        assert!(phases
-            .requests
-            .iter()
-            .all(|request| request.max_output_tokens == 1));
+        assert!(
+            phases
+                .requests
+                .iter()
+                .all(|request| request.max_output_tokens == 1)
+        );
         assert_eq!(phases.profile_start_ms, None);
         // An external caller can run the same prepared context through the
         // public offline P/D executor without private runtime constructors.
@@ -653,7 +690,7 @@ pub fn rebuild_replay_report_literals(
     aisimulate_core::ReplayReport,
     aisimulate_core::replay::PerRequestRecord,
 ) {
-    use aisimulate_core::{replay::PerRequestRecord, ReplayReport};
+    use aisimulate_core::{ReplayReport, replay::PerRequestRecord};
     (
         ReplayReport {
             kv_eviction_policy: report.kv_eviction_policy,

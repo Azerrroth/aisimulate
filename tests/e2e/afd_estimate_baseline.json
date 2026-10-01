@@ -403,6 +403,389 @@
         "match": "incompatible with afd_phase",
         "origin": "cli_estimate"
       }
+    },
+    {
+      "id": "microbatch-one",
+      "overrides": {
+        "num_microbatches": 1
+      },
+      "metrics": {
+        "tpot": 16.088
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 6,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "microbatch-four",
+      "overrides": {
+        "num_microbatches": 4
+      },
+      "metrics": {
+        "tpot": 50.124
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "attention-tp-two",
+      "overrides": {
+        "a_tp_size": 2
+      },
+      "metrics": {
+        "tpot": 32.634
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 4,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "attention-tp-four",
+      "overrides": {
+        "a_tp_size": 4
+      },
+      "metrics": {
+        "tpot": 29.727
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 2,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "ffn-ep-four",
+      "overrides": {
+        "f_moe_ep_size": 4
+      },
+      "metrics": {
+        "tpot": 34.707
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 4
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "attention-two-nodes",
+      "overrides": {
+        "n_a_nodes": 2
+      },
+      "metrics": {
+        "tpot": 48.435
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 16,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "ffn-two-nodes",
+      "overrides": {
+        "n_f_nodes": 2
+      },
+      "metrics": {
+        "tpot": 33.897
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 16,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "short-context",
+      "overrides": {
+        "isl": 1024
+      },
+      "metrics": {
+        "tpot": 37.612
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "long-context",
+      "overrides": {
+        "isl": 32768
+      },
+      "metrics": {
+        "tpot": 39.249
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "communication-half",
+      "overrides": {
+        "comm_overhead_factor": 0.5
+      },
+      "metrics": {
+        "tpot": 33.239
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "communication-one",
+      "overrides": {
+        "comm_overhead_factor": 1.0
+      },
+      "metrics": {
+        "tpot": 34.7
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "boundary-on-ffn",
+      "overrides": {
+        "afd_boundary_on_attn": false
+      },
+      "metrics": {
+        "tpot": 38.621
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "decode-with-pd",
+      "overrides": {
+        "afd_combined_with_pd": true,
+        "tp_size": 8,
+        "moe_tp_size": 1,
+        "moe_ep_size": 8
+      },
+      "metrics": {
+        "ttft": 2817.29,
+        "tpot": 37.623
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8,
+        "(p)impl": "static_ctx",
+        "(d)impl": "afd",
+        "num_total_gpus": 24
+      },
+      "phases": [
+        "decode"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "prefill-with-pd",
+      "overrides": {
+        "afd_combined_with_pd": true,
+        "afd_phase": "prefill",
+        "tp_size": 8,
+        "moe_tp_size": 1,
+        "moe_ep_size": 8
+      },
+      "metrics": {
+        "ttft": 5084.797,
+        "tpot": 13.686
+      },
+      "path": {
+        "phase": "prefill",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8,
+        "(p)impl": "afd",
+        "(d)impl": "static_gen",
+        "num_total_gpus": 24
+      },
+      "phases": [
+        "prefill"
+      ],
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "invalid-phase",
+      "overrides": {
+        "afd_phase": "invalid"
+      },
+      "error": {
+        "type": "ValueError",
+        "match": "afd_phase must be",
+        "origin": "cli_estimate"
+      },
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "invalid-missing-attention-nodes",
+      "overrides": {
+        "n_a_nodes": null
+      },
+      "error": {
+        "type": "ValueError",
+        "match": "n_a_nodes is required",
+        "origin": "cli_estimate"
+      },
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "invalid-missing-ffn-nodes",
+      "overrides": {
+        "n_f_nodes": null
+      },
+      "error": {
+        "type": "ValueError",
+        "match": "n_f_nodes is required",
+        "origin": "cli_estimate"
+      },
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "invalid-zero-microbatches",
+      "overrides": {
+        "num_microbatches": 0
+      },
+      "error": {
+        "type": "ValueError",
+        "match": "num_microbatches .* must be >= 1",
+        "origin": "__post_init__"
+      },
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
+    },
+    {
+      "id": "invalid-zero-attention-tp",
+      "overrides": {
+        "a_tp_size": 0
+      },
+      "error": {
+        "type": "ValueError",
+        "match": "tp_a .* must be a positive divisor",
+        "origin": "__post_init__"
+      },
+      "target_commit": "6916579586561f22fbde2f70a7f3d395c2ec5a96"
     }
   ],
   "input_commit": "cab77b9c7888b1c40df8cd3228f5e03c355ef23c"

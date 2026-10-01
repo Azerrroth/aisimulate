@@ -26,6 +26,25 @@ _EXPECTED_CASE_IDS = {
     "both",
     "invalid-pipeline",
     "invalid-combined-both",
+    "microbatch-one",
+    "microbatch-four",
+    "attention-tp-two",
+    "attention-tp-four",
+    "ffn-ep-four",
+    "attention-two-nodes",
+    "ffn-two-nodes",
+    "short-context",
+    "long-context",
+    "communication-half",
+    "communication-one",
+    "boundary-on-ffn",
+    "decode-with-pd",
+    "prefill-with-pd",
+    "invalid-phase",
+    "invalid-missing-attention-nodes",
+    "invalid-missing-ffn-nodes",
+    "invalid-zero-microbatches",
+    "invalid-zero-attention-tp",
 }
 
 
@@ -43,6 +62,8 @@ def test_baseline_manifest_is_complete():
             query = {**_BASELINE["query"], **case["overrides"]}
             phase = query["afd_phase"]
             expected = {"prefill": {"ttft"}, "decode": {"tpot"}, "both": {"ttft", "tpot"}}[phase]
+            if query["afd_combined_with_pd"]:
+                expected = {"ttft", "tpot"}
             assert set(case["metrics"]) == expected
             assert all(math.isfinite(value) and value > 0 for value in case["metrics"].values())
             assert set(case["phases"]) == ({"prefill", "decode"} if phase == "both" else {phase})
@@ -68,7 +89,7 @@ def test_afd_estimate_matches_frozen_target(case, frozen_inputs, tmp_path, caplo
     evidence = {
         "id": case["id"],
         "query": query,
-        "baseline_commit": _BASELINE["commit"],
+        "baseline_commit": case.get("target_commit", _BASELINE["commit"]),
         "input_commit": _BASELINE["input_commit"],
     }
     try:
@@ -88,7 +109,8 @@ def test_afd_estimate_matches_frozen_target(case, frozen_inputs, tmp_path, caplo
 
         result = cli_estimate(**query)
         expected_metrics = {"prefill": {"ttft"}, "decode": {"tpot"}, "both": {"ttft", "tpot"}}
-        assert set(case["metrics"]) == expected_metrics[query["afd_phase"]]
+        required = {"ttft", "tpot"} if query["afd_combined_with_pd"] else expected_metrics[query["afd_phase"]]
+        assert set(case["metrics"]) == required
         evidence["metrics"] = {}
         for metric, target in case["metrics"].items():
             actual = getattr(result, metric)

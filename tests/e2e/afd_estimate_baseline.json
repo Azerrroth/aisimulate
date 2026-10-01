@@ -1,0 +1,374 @@
+{
+  "commit": "920453e6a6cfb958eae2b2f725db9b767788b4c7",
+  "python": "3.13.7",
+  "query": {
+    "model_path": "Qwen/Qwen3-235B-A22B-FP8",
+    "system_name": "h200_sxm",
+    "backend_name": "sglang",
+    "backend_version": "0.5.14",
+    "database_mode": "HYBRID",
+    "mode": "afd",
+    "afd_phase": "decode",
+    "afd_combined_with_pd": false,
+    "n_a_nodes": 1,
+    "n_f_nodes": 1,
+    "a_tp_size": 1,
+    "f_moe_ep_size": 8,
+    "num_microbatches": 3,
+    "pipeline_model": "conservative",
+    "comm_overhead_factor": 2.0,
+    "afd_boundary_on_attn": true,
+    "isl": 16000,
+    "osl": 64,
+    "batch_size": 6,
+    "a_batch_size": 6,
+    "prefix": 0,
+    "nextn": 0
+  },
+  "input_sha256": {
+    "systems/h200_sxm.yaml": "142584d6bddd98207fd04e844029b0ba5d6fcd4c6f41016c5e77f0cbe4053614",
+    "systems/data/h200_sxm/attention/sglang/0.5.14/collection_meta.yaml": "13d856a35f014c7f8519a98e105c0e05fd87f1faec9ae55e2f284f67d7319b5f",
+    "systems/data/h200_sxm/attention/sglang/0.5.14/context_attention_perf.parquet": "7dce2c4bbcaa0f3a5f59b6f08f983dbb134e12a0c4822d8604b52fabfe233862",
+    "systems/data/h200_sxm/attention/sglang/0.5.14/generation_attention_perf.parquet": "aa73a073acaf957306f55366e7115ab515b145c39ed812e6924551dbeaa42a69",
+    "systems/data/h200_sxm/attention/trtllm/1.3.0rc20/collection_meta.yaml": "056f8635964c99c5dd0106367dfb00227a28fb4e9cd0874d4c7ee5732b60b591",
+    "systems/data/h200_sxm/attention/trtllm/1.3.0rc20/context_attention_perf.parquet": "427dd1466446c7ac6e4b4d30543ed865d05e7c1f351e9c1d24db7e00e900cced",
+    "systems/data/h200_sxm/attention/trtllm/1.3.0rc20/generation_attention_perf.parquet": "74f9f7f4b593ad90cae49a00bf84703163fcdd32e31c582633378747a306c134",
+    "systems/data/h200_sxm/attention/vllm/0.24.0/collection_meta.yaml": "0cc7dd9ea578fe78d40c33bb8ed644a96c700c24b59e1a62b59360d9335cb73d",
+    "systems/data/h200_sxm/attention/vllm/0.24.0/context_attention_perf.parquet": "617461771db78d7a409fbad3e09ecda73efd44709f0ada0f46b3361035538421",
+    "systems/data/h200_sxm/attention/vllm/0.24.0/generation_attention_perf.parquet": "ea1b6f802bb7b0792a6eaa9b533d5728c2b230749b9673f6553743ddb78837b9",
+    "systems/data/h200_sxm/comm/nccl/2.23/collection_meta.yaml": "ea7400fe58e587cb2d9ca29ebdce60798f6bf3e384c59e9df069b0ca30c13b73",
+    "systems/data/h200_sxm/comm/nccl/2.23/nccl_perf.parquet": "307944549738906a505b6be31bbc34a93c25b2fe52b50193dd26a5fa30b9d8fd",
+    "systems/data/h200_sxm/comm/nccl/2.26.2/collection_meta.yaml": "6b40bd84085192ec4f7cb2780635dfe2eb00857e30987dd6c1a90c3b4a63cd8a",
+    "systems/data/h200_sxm/comm/nccl/2.26.2/nccl_perf.parquet": "85bc8eeed2e20da0c74d035a9f1172ef9196fc729a49956c78ac19c659d101c2",
+    "systems/data/h200_sxm/comm/nccl/2.29.2/collection_meta.yaml": "726e840dca1cb0ca2452ea9080994abebb739da166560ecf32d3a027d4fd5190",
+    "systems/data/h200_sxm/comm/nccl/2.29.2/nccl_perf.parquet": "9b46ab90aca04f23b80c3d38bc3241d449ff27aba9aa39de793daafa8a841e0f",
+    "systems/data/h200_sxm/comm/sglang/0.5.10/collection_meta.yaml": "1f539fa280fe89953c6ce7d5655691702e8572e2f33f9ab7a6c34b34ac4993e9",
+    "systems/data/h200_sxm/comm/sglang/0.5.10/custom_allreduce_perf.parquet": "8811ae9bbc1227b12ea736b02cacd5878202cfdcdf9853a55b69fbf222a5d50b",
+    "systems/data/h200_sxm/comm/sglang/0.5.12/collection_meta.yaml": "1fbcb155d7b0b7388896334bc347a9ded8b1065d1a8502673e1e5852072886f0",
+    "systems/data/h200_sxm/comm/sglang/0.5.12/wideep_deepep_ll_perf.parquet": "72aa9bf9c8bea6822b0990c275e26d183f1a437a750e8bb26d48f397cd14de80",
+    "systems/data/h200_sxm/comm/sglang/0.5.12/wideep_deepep_normal_perf.parquet": "bdc475c5f8b75a04685a6eb466d7d85f606ac3d1a1627ce1982ff9ad207d1b76",
+    "systems/data/h200_sxm/comm/sglang/0.5.14/collection_meta.yaml": "7fde4cb955fb23b33c1dcb52528f19ea87c1b312cbb57c32093530fc9db6a1d9",
+    "systems/data/h200_sxm/comm/sglang/0.5.14/custom_allreduce_perf.parquet": "b5c1e444cd23854ed8983eaacc3c85b6a076caac89f40812226b6367ca0e5832",
+    "systems/data/h200_sxm/comm/sglang/0.5.6.post2/collection_meta.yaml": "6cbebaba034bca71ece6ca51673e6bcb9e0e7be53acc113464b91fea87d367d1",
+    "systems/data/h200_sxm/comm/sglang/0.5.6.post2/custom_allreduce_perf.parquet": "43adfcc69e55ce6cb0c3ad2f2c753707410779e3d80f98d6f4a10e121cd395b9",
+    "systems/data/h200_sxm/comm/sglang/0.5.6.post2/wideep_deepep_ll_perf.parquet": "e3f0e2bde9396aa4a7f521a06766bbbcce648161fab32543e0f1381c1a751f42",
+    "systems/data/h200_sxm/comm/sglang/0.5.6.post2/wideep_deepep_normal_perf.parquet": "5cd8a9ed431a51fc60931df351280528dc9d0a206ae18cfe07afb996e40ca206",
+    "systems/data/h200_sxm/comm/sglang/0.5.9/collection_meta.yaml": "afa1efd375d2c9d0f1db64e375505ec3a5559e01d531875c11d6155ec4ecf151",
+    "systems/data/h200_sxm/comm/sglang/0.5.9/custom_allreduce_perf.parquet": "508ec4d2901c87260c34a79bee0c1a46485115de312cafaebaba32467065ef97",
+    "systems/data/h200_sxm/comm/trtllm/1.2.0rc5/collection_meta.yaml": "b5be247d25ce3c3c4fa595333c61a4e81b7378d7df1458e991c284bcd7279ac9",
+    "systems/data/h200_sxm/comm/trtllm/1.2.0rc5/custom_allreduce_perf.parquet": "43adfcc69e55ce6cb0c3ad2f2c753707410779e3d80f98d6f4a10e121cd395b9",
+    "systems/data/h200_sxm/comm/trtllm/1.3.0rc10/collection_meta.yaml": "877345c9c49a071789837c2eb13aca5cbe02da198bbc75b4e3274514bbf8c9cb",
+    "systems/data/h200_sxm/comm/trtllm/1.3.0rc10/custom_allreduce_perf.parquet": "4a9f8807cf3593fb4ffa676ba552ef3864e8f3dd156cdbabf8f9b757a7b759cd",
+    "systems/data/h200_sxm/comm/trtllm/1.3.0rc11/collection_meta.yaml": "2f2d7ff8c45f608235e727db69c1377b1afa18af1ef918daed8ee65182e3a2fc",
+    "systems/data/h200_sxm/comm/trtllm/1.3.0rc11/errors_moe_a2a_trtllm.trtllm_deepep_ll.json": "c907fa87e19f828e7a27208ed059d76cd6c8efc14f960c6e5dde989c8ba350a4",
+    "systems/data/h200_sxm/comm/trtllm/1.3.0rc11/moe_a2a_perf.parquet": "daa0cd15b7f619077e16c508ed72507eea463c23dcad5e898e1865e32406f1eb",
+    "systems/data/h200_sxm/comm/trtllm/1.3.0rc20/collection_meta.yaml": "6369885f231da641c21d58b3c9fb1a90912159e505d6bff326330e2fcc10b32b",
+    "systems/data/h200_sxm/comm/trtllm/1.3.0rc20/custom_allreduce_perf.parquet": "39c8b31495a37e95900c4edd72d499e1512247ead27178620536ddc8b10fa036",
+    "systems/data/h200_sxm/comm/vllm/0.14.0/collection_meta.yaml": "efcbeeba6249e0e64f556900d1ea6987f02ce4d5444f33b0df5b230babdb4ca1",
+    "systems/data/h200_sxm/comm/vllm/0.14.0/custom_allreduce_perf.parquet": "7ffd822998e9ab20fb5099ebece720e4d2d2d727bccb929a1e8b9e95c0842ecc",
+    "systems/data/h200_sxm/comm/vllm/0.18.0/collection_meta.yaml": "2ea03067828cc98f37db201fb4c78b5b7768da9483e292f2bc7ce1ca404ed9a9",
+    "systems/data/h200_sxm/comm/vllm/0.18.0/custom_allreduce_perf.parquet": "e24c11e4a572a49fff48b41d3d9b6c9a11bf8b862e18921feaea73480e239e31",
+    "systems/data/h200_sxm/comm/vllm/0.19.0/collection_meta.yaml": "cd1074be35d141bbbe3b58cbdec42940a7e283c808c700c5604f7db3ec60ecb6",
+    "systems/data/h200_sxm/comm/vllm/0.19.0/custom_allreduce_perf.parquet": "9d8ccbd269c5cbdb4e1ee48f311565561476c9a230206ede3a06fae9f761158f",
+    "systems/data/h200_sxm/comm/vllm/0.24.0/collection_meta.yaml": "727abe9f305073ff4c145bd1f9c841a556218af0ea5feb68fbeae5856af0155c",
+    "systems/data/h200_sxm/comm/vllm/0.24.0/custom_allreduce_perf.parquet": "160feaa0058c6df46ddc86571129b136bda11d0177d024c4d0115779e1a62f0b",
+    "systems/data/h200_sxm/comm/vllm/0.24.0/moe_a2a_perf.parquet": "5fff1cb89e509a2334ea6cf8e7f30fe7785aa5aaf435a9945075495d94942978",
+    "systems/data/h200_sxm/encoder_attention/sglang/0.5.14/collection_meta.yaml": "d9b1f4df095dac873e71a0d662265c7aa3450bc19ae5be8dd016165f1b3f65ac",
+    "systems/data/h200_sxm/encoder_attention/sglang/0.5.14/encoder_attention_perf.parquet": "6650ffea0383c04dc623a9820a5e844b3c5cab44cf40e6a5e46dd10d565f1700",
+    "systems/data/h200_sxm/encoder_attention/trtllm/1.3.0rc20/collection_meta.yaml": "d4cf5c3c02554dd06f563fcea4210ded9f91c6f68815db648ec9f9325511422d",
+    "systems/data/h200_sxm/encoder_attention/trtllm/1.3.0rc20/encoder_attention_perf.parquet": "bf75902631dbe3ce53cd9025eadca7dcc6a14095b89785bff713bbc89fcc62f6",
+    "systems/data/h200_sxm/encoder_attention/vllm/0.24.0/collection_meta.yaml": "c029aa7e544a3408e6d20d083120d52ff38b5f9fdc3cc74e66ed1e249776d2f0",
+    "systems/data/h200_sxm/encoder_attention/vllm/0.24.0/encoder_attention_perf.parquet": "a02164fc69ba85e3d67999adf6dec562a7c9ea40c7d8deb4a870923c8e17609f",
+    "systems/data/h200_sxm/gemm/sglang/0.5.14/collection_meta.yaml": "49446454a54c9677c6f4e27aa76cea4799bfa0995334a4e51fe7130cb833ee57",
+    "systems/data/h200_sxm/gemm/sglang/0.5.14/gemm_perf.parquet": "26b5f9a52cd20ceab89f899e2401df995b4eae20d865594145d372485122f9be",
+    "systems/data/h200_sxm/gemm/trtllm/1.3.0rc20/collection_meta.yaml": "6f9acb89d039741d1a07e02b693b91a27a32d3c195eec7315c6c176e285423a2",
+    "systems/data/h200_sxm/gemm/trtllm/1.3.0rc20/gemm_perf.parquet": "25c92b553efe1bf377def1f44331c80588249f6666080291d0b6ef8776209dca",
+    "systems/data/h200_sxm/gemm/vllm/0.24.0/collection_meta.yaml": "daa582ac4d93540db224dc2ca2d10160ad3da9e14eaef5057080809cd13f3dbe",
+    "systems/data/h200_sxm/gemm/vllm/0.24.0/gemm_perf.parquet": "d5b767730e5d45ba3c887f3825c00fa00968887a9288c24e5464bec5f199b3f2",
+    "systems/data/h200_sxm/kda/sglang/0.5.16/collection_meta.yaml": "5a73081150fdbab1131c505c8cc5527a6399e0c1b5c4100ec9975db0d9029e0e",
+    "systems/data/h200_sxm/kda/sglang/0.5.16/kda_perf.parquet": "804bb8f6a674ae16bde47a28c6d412bd0c2a72d9ad0456fdf1dfcd92aa25a5a9",
+    "systems/data/h200_sxm/kda/vllm/0.1.dev19262/collection_meta.yaml": "0085a5c69f9c73946f8c7128a273e1495d6c0f1aaabc91cb45f533e25c00d3a7",
+    "systems/data/h200_sxm/kda/vllm/0.1.dev19262/kda_perf.parquet": "0673ae9c60b53e2d5fd27e4f3f46e2a50f05579f4c2a499cd8360c7a27ed2170",
+    "systems/data/h200_sxm/linear_attention/sglang/0.5.14/collection_meta.yaml": "f3aea56d17116582bd149e08a1b63d467265a91780c19e27aadf57dc1a116d08",
+    "systems/data/h200_sxm/linear_attention/sglang/0.5.14/gdn_perf.parquet": "3a47a2122b7db87af1622fdc3164de19619f54ede6bd0647a92638341f3ba384",
+    "systems/data/h200_sxm/linear_attention/trtllm/1.3.0rc20/collection_meta.yaml": "ee478037a14c79743750e176eb31f018ed1b1d78b17d69d72a873f36c01a66b3",
+    "systems/data/h200_sxm/linear_attention/trtllm/1.3.0rc20/gdn_perf.parquet": "36f89254f5fe75ec848d6b25dd1f1e7c4c527eefbd466ad80d20260142b11148",
+    "systems/data/h200_sxm/linear_attention/trtllm/1.3.0rc20/mamba2_perf.parquet": "aef56f2e977c790ba7e18fd1f6e85cbced7f68d7846815c0687bb098cfc4d1e6",
+    "systems/data/h200_sxm/linear_attention/vllm/0.24.0/collection_meta.yaml": "346b47a8790913ab4602dd53f2ef50b4330913022e6cd400b724d5677271b90d",
+    "systems/data/h200_sxm/linear_attention/vllm/0.24.0/gdn_perf.parquet": "f312e5c1138d09c398e6c495e118cbb77ddabf8e6de697a4ad9e503228b76548",
+    "systems/data/h200_sxm/mhc/sglang/0.5.14/collection_meta.yaml": "be7673a37fc576debbbe7fd142ab670c331ead0c38a67bb356994f90723acf5a",
+    "systems/data/h200_sxm/mhc/sglang/0.5.14/mhc_module_perf.parquet": "e618d01b4f8577e8f9aa13e3650404f89e26530c0fb20d41822661f43477cbb4",
+    "systems/data/h200_sxm/mhc/trtllm/1.3.0rc20/collection_meta.yaml": "4a396dafbed9c4aa2736d38707abdf1f06630fcb4523028e11c464d643cf10a2",
+    "systems/data/h200_sxm/mhc/trtllm/1.3.0rc20/mhc_module_perf.parquet": "ffe821419144b7f0896dc23566a1c115aa25becf3e9b035da04639be8eb723b1",
+    "systems/data/h200_sxm/mhc/vllm/0.24.0/collection_meta.yaml": "79a01216534574c387f1e4307536815830fa3b2d9bb86c121eaebc7b17481d50",
+    "systems/data/h200_sxm/mhc/vllm/0.24.0/mhc_module_perf.parquet": "ee6bd91adb07f6da40a9fddea4b0857e91bf15ff1cc23ce1530820a12eb773b9",
+    "systems/data/h200_sxm/mla/sglang/0.5.10/collection_meta.yaml": "14a371523da75f25f145648d8b71c6a28bf87b76b8ed22a111197ed75d8c8d30",
+    "systems/data/h200_sxm/mla/sglang/0.5.10/wideep_context_mla_perf.parquet": "af20a56f4f6a26b92a90301c216f9ec21be9960a08b16230c849d4442794eaa2",
+    "systems/data/h200_sxm/mla/sglang/0.5.10/wideep_generation_mla_perf.parquet": "b6caa442ee1ebd8af110b1fecf393398bc04a45de34e6842c8e12a1e9d7d56d4",
+    "systems/data/h200_sxm/mla/sglang/0.5.14/collection_meta.yaml": "7db79d7880f1939687a50be5b488c798cde7a45734464997e298ebefefeec7cd",
+    "systems/data/h200_sxm/mla/sglang/0.5.14/context_mla_perf.parquet": "d57ac16b3adee880de43fe6497b066a279e0c4b26514811249f257c170d7169d",
+    "systems/data/h200_sxm/mla/sglang/0.5.14/generation_mla_perf.parquet": "2c7a8a6d7cc6b674a70378996b507e9afce78ffc54f72f492c1b3b8f16049fe7",
+    "systems/data/h200_sxm/mla/sglang/0.5.6.post2/collection_meta.yaml": "023bd908b374b3bfdd8d527b18a6179e710ce994949d4e6ce69fa3ed4fbca01b",
+    "systems/data/h200_sxm/mla/sglang/0.5.6.post2/wideep_context_mla_perf.parquet": "1ab9156fe7a877dc45ec7a3c262c6ed6d462690902ac3da60b7c5d442a2af40b",
+    "systems/data/h200_sxm/mla/sglang/0.5.6.post2/wideep_generation_mla_perf.parquet": "42c2526440014a0cf3a70b383a84cfb88353afc2adf10a6ec993159a7e51d458",
+    "systems/data/h200_sxm/mla/trtllm/1.3.0rc20/collection_meta.yaml": "6ba85f0431c084e09002a26f368fa1963d5614e228270692c5881aa80e26a754",
+    "systems/data/h200_sxm/mla/trtllm/1.3.0rc20/context_mla_perf.parquet": "c5aae589679e89c6f3c89b3a8fa68f2d5883f6db5260c97292dabebeb902fea9",
+    "systems/data/h200_sxm/mla/trtllm/1.3.0rc20/generation_mla_perf.parquet": "792332a250f06f36b7177dd78f0921be3c8d0cdd70539a95fb3f5370a42c5d1a",
+    "systems/data/h200_sxm/mla/trtllm/1.3.0rc20/mla_context_module_perf.parquet": "ca42f46e3a3d00028f0a7c1c0821692165b35ef78f5b2d695360210bdb78aaf2",
+    "systems/data/h200_sxm/mla/trtllm/1.3.0rc20/mla_generation_module_perf.parquet": "2b5e0ee011058cf480316d5696717e5a1543ffc6599bd32a7b9a28c641065e87",
+    "systems/data/h200_sxm/mla/vllm/0.24.0/collection_meta.yaml": "58f4524dca5582a61aff0aea3a99ea45a435ee5e281de1396b7b2e3102755fbf",
+    "systems/data/h200_sxm/mla/vllm/0.24.0/mla_context_module_perf.parquet": "77709b06e885407edbf68caa702dd710789881d131239251fd287adde6e6f0ee",
+    "systems/data/h200_sxm/mla/vllm/0.24.0/mla_generation_module_perf.parquet": "fc56a9d5cbd8127472c633ded2ff7549d9fddd6dda21237c5a13956045b086ab",
+    "systems/data/h200_sxm/mla_bmm/sglang/0.5.14/collection_meta.yaml": "a250c933eb64dda6a63c13d44be6ffe84af5b7ad4998bba7c8eeacb941961b24",
+    "systems/data/h200_sxm/mla_bmm/sglang/0.5.14/mla_bmm_perf.parquet": "348570bffec4ee94bfb083b0876fff9493cafa55b68e9718c422f5005bf333c9",
+    "systems/data/h200_sxm/mla_bmm/trtllm/1.3.0rc20/collection_meta.yaml": "d54d5b72cd6ac5c15e373a9ba936792157c001cfac71d8805b1b914b2af40168",
+    "systems/data/h200_sxm/mla_bmm/trtllm/1.3.0rc20/mla_bmm_perf.parquet": "a03e5f58ee213db82078f9f0a9d4ad05550ab41194613a79a3cffae04d748b25",
+    "systems/data/h200_sxm/mla_bmm/vllm/0.24.0/collection_meta.yaml": "03b95fba5a34d48a56b4d0eef50f74d54d2983b054dec90d62d20ae71e8a502a",
+    "systems/data/h200_sxm/mla_bmm/vllm/0.24.0/mla_bmm_perf.parquet": "7f600b9e7658f62b9f6444c7afd21914e55e8a3462ea98b873aa4e8152c12393",
+    "systems/data/h200_sxm/mlp/sglang/0.5.6.post2/collection_meta.yaml": "b5f09be57e25713c601e01a5b1ba9a8514da5afa2150b3c2429870f269d0c30a",
+    "systems/data/h200_sxm/mlp/sglang/0.5.6.post2/wideep_context_mlp_perf.parquet": "f3764b4cf3deefa8dbf0e644ac90380d334d2689a1ffd6be9c9c11784cb2bd83",
+    "systems/data/h200_sxm/mlp/sglang/0.5.6.post2/wideep_generation_mlp_perf.parquet": "9ccf6aa129d50238c329b3308a2340c127c24e60092a37393651647decf28824",
+    "systems/data/h200_sxm/moe/sglang/0.5.10/collection_meta.yaml": "80973da827d710967492ad968972d176eff8581253a99f6dd276e6c018f55429",
+    "systems/data/h200_sxm/moe/sglang/0.5.10/moe_perf.parquet": "8e8ff9c7283da3f89f2b7123d0203601aa5971178272ee94636c2cf170fdebb9",
+    "systems/data/h200_sxm/moe/sglang/0.5.10/wideep_context_moe_perf.parquet": "2fb900d6d35636d190b74f6a92486b12b56c9feb84b0430e39913e9a1da169a5",
+    "systems/data/h200_sxm/moe/sglang/0.5.10/wideep_generation_moe_perf.parquet": "2175bee4567bff9b5c75002d6e166d475def9b6ef5ce812fa5f7ea38444c4df9",
+    "systems/data/h200_sxm/moe/sglang/0.5.14/collection_meta.yaml": "c6495240f1f6940293adf8c652b2bcc24b5f4dc8816395ff63477b4cf2dfcea4",
+    "systems/data/h200_sxm/moe/sglang/0.5.14/moe_perf.parquet": "81db1329717f6ff69fafaac7d33a4ec7abc6681c189f3e158016d88e35633478",
+    "systems/data/h200_sxm/moe/sglang/0.5.6.post2/collection_meta.yaml": "694e7ea03f9a7bd42c6a6db2dceb78119249ae38426e61bb5c2ea6193e3b5a55",
+    "systems/data/h200_sxm/moe/sglang/0.5.6.post2/wideep_context_moe_perf.parquet": "b23e4615b44d72ef04b2f77473c9eda8bf2d08663f2ac02770ddc20eb4f5aca0",
+    "systems/data/h200_sxm/moe/sglang/0.5.6.post2/wideep_generation_moe_perf.parquet": "47f05a90615e0ac223196bc00b6bb02192e0b58304d808996f4f26aaf364232d",
+    "systems/data/h200_sxm/moe/trtllm/1.3.0rc10/collection_meta.yaml": "36a3b040116f60ae0352af26a266488f322c43a80bb3d2e3f9d42441f4596014",
+    "systems/data/h200_sxm/moe/trtllm/1.3.0rc10/moe_perf.parquet": "17b27e3a6af4e3c2b75410f565b8b83a08475b06eab03e18e18182e533d4f880",
+    "systems/data/h200_sxm/moe/trtllm/1.3.0rc10/wideep_moe_perf.parquet": "396c46bfaf0d4daf73c1ebf3cf289755dd372ea0c3f3a707c59c8b755b15af3a",
+    "systems/data/h200_sxm/moe/trtllm/1.3.0rc20/collection_meta.yaml": "83bfc11f4fa404ba26a156ad880c802fbb554d0511ce4dad6d3d06e0cb71e1cc",
+    "systems/data/h200_sxm/moe/trtllm/1.3.0rc20/moe_perf.parquet": "a975bd5d400b5c3dadda62a178164cab20e0a670d238107d66b2b02b1bb13ce2",
+    "systems/data/h200_sxm/moe/trtllm/1.3.0rc23/collection_meta.yaml": "3d56443f2caa8081f0aaf7286138c383ffc16b12ee340dcd0b4e0bcc066072b9",
+    "systems/data/h200_sxm/moe/trtllm/1.3.0rc23/moe_perf.parquet": "8cd25c4cfa255a2d58652ce6596a49ceec1660ee396991d275706ecbe40bd5a4",
+    "systems/data/h200_sxm/moe/vllm/0.19.0/collection_meta.yaml": "6f31d3cd3c66a43a6073319230d131d63f31de13c1e110c2cc390703bb364eb8",
+    "systems/data/h200_sxm/moe/vllm/0.19.0/moe_perf.parquet": "9d44a1b85a86bb930ed224488e84f37d8250dbb27e0024ec48dc5887cbd6849f",
+    "systems/data/h200_sxm/moe/vllm/0.24.0/collection_meta.yaml": "4651761b54f023837dd62eb87f2cac45f222c60b148572d6cfb32e91fd195118",
+    "systems/data/h200_sxm/moe/vllm/0.24.0/moe_perf.parquet": "0dbb955a50103853e5782a8e0532169ea70b372460f9e3904e18eb00ff1f3aa6",
+    "systems/data/h200_sxm/msa/sglang/0.5.16/collection_meta.yaml": "f8a7a545b02d586250dd7e9e959d305d07b7de6d7209bc0c24a8665f5dd98f8f",
+    "systems/data/h200_sxm/msa/sglang/0.5.16/msa_context_module_perf.parquet": "9772896571ff17bb8f724afca199e3e8ea9dd052deea5762f35e826b6dcb3775",
+    "systems/data/h200_sxm/msa/sglang/0.5.16/msa_generation_module_perf.parquet": "7465275e7098f65b82783530c064f0a6314c6cc2823d9478600dd68fb54b5022",
+    "systems/data/h200_sxm/msa/trtllm/1.3.0rc23/collection_meta.yaml": "8230bed4d7852e6b47efec565b6d793f7c2a55238aa6956d097b91c39ab5a66c",
+    "systems/data/h200_sxm/msa/trtllm/1.3.0rc23/msa_context_module_perf.parquet": "401d4b3de6ebeda3281b2e05f4b714c0cad725e5a011bb71c720bd627cdb6f5d",
+    "systems/data/h200_sxm/msa/trtllm/1.3.0rc23/msa_generation_module_perf.parquet": "3b4d1fdda0b1c5d077fe144987a7acbea10f55dc899762ee828306748436234c",
+    "systems/data/h200_sxm/msa/vllm/0.24.0/collection_meta.yaml": "bf6d60f4a8c8cfdf2c48613d00067e9546dbf8ceb4d91675974f19a80de26615",
+    "systems/data/h200_sxm/msa/vllm/0.24.0/msa_context_module_perf.parquet": "cb8544151c07da74e92b3e749727358352f9f3e03c893e4e5ac53370fde236d6",
+    "systems/data/h200_sxm/msa/vllm/0.24.0/msa_generation_module_perf.parquet": "a4c0076f18f1114a4bcc6755b0c3b30dba821a1d2de5d17013e74a01a57be7e0",
+    "systems/data/h200_sxm/quantize/sglang/0.5.14/collection_meta.yaml": "86db6663781aa7ff8da428941e8997498b70807bce116fcbda2c1b5fce6b1437",
+    "systems/data/h200_sxm/quantize/sglang/0.5.14/computescale_perf.parquet": "95ae9dec2fdd3317b8c309dee5c788855a930498fa30990a713e8482e40c01d2",
+    "systems/data/h200_sxm/quantize/sglang/0.5.14/scale_matrix_perf.parquet": "865cbb9c9b6a399bc8b90e8ca83f7718179e866a23f84d895b2ee084e18daf8d",
+    "systems/data/h200_sxm/quantize/trtllm/1.3.0rc20/collection_meta.yaml": "fe47358f868c58dba26440197818e32a88b5e4a67bc03bb68b6cdbbee01b5ac8",
+    "systems/data/h200_sxm/quantize/trtllm/1.3.0rc20/computescale_perf.parquet": "d0878a80bfa1d81fb31766aad3b4ff17076745d5c50f6a3a66e58f6f73022504",
+    "systems/data/h200_sxm/quantize/trtllm/1.3.0rc20/scale_matrix_perf.parquet": "695fd3fc1e237e38e4b15dd3b0888fcbfa8755d0081ca87a1a8586e5b4c57af8",
+    "systems/data/h200_sxm/quantize/vllm/0.24.0/collection_meta.yaml": "371b78a48e5db265c0cab68ef29a232b3bff68b2d5e90037edf8e29637b38a54",
+    "systems/data/h200_sxm/quantize/vllm/0.24.0/computescale_perf.parquet": "e0e616570be5e274a231ef75685e96b16d7af875660f60a8cf3adf8557f3ae4e",
+    "systems/data/h200_sxm/quantize/vllm/0.24.0/scale_matrix_perf.parquet": "d99f160249839153204ac796cbe101c90189f7b63c4bd1b82fef4dc29b60e634",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/collection_meta.yaml": "158ed84a685dbb6c0094d79074ced5bf924352ed7de5698743442bb482659c5b",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsa_context_module_perf.parquet": "6251ff75a324fa9e3a80c74d9b7b625ada1dcc2c59b6bf617fd7a05ca238239d",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsa_generation_module_perf.parquet": "1bb75cb0e98dcb8bdbfb5e51404844caf1bad8eb62d70e28d9123129afe4d9f4",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsv4_csa_context_module_perf.parquet": "dbf55f02daa464677fc0cc82f8b093d1f0b6c2d0e9b6b126887747bf1ca68ab1",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsv4_csa_generation_module_perf.parquet": "ae98c32421ad75f978f0c6469f4ceebe46435b79e4d3414736ab23ce228be4c5",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsv4_csa_topk_calib_perf.parquet": "e05b8d3714c9505265024a15fa228907083c54028d3787e9d6648315fa0d21ac",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsv4_hca_context_module_perf.parquet": "0b724ea3714299748b5ba50912b09fab8a4afd16824d74b37b639fee577b03ff",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsv4_hca_generation_module_perf.parquet": "835e86f7a2e6a6a0fdcdf2c6d9821d89b92b0bd56b55a9febc45da371b25f6b9",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/dsv4_paged_mqa_logits_module_perf.parquet": "5abff8def4fea2f9214f423c9a0fdadd03f0aa9cd93a20ea70a7710da6cf4ab9",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/glm5_dsa_attn_module_perf.parquet": "15ea070d8a2889e5ba1240fb9bb2f5cb79cbacfc7969188495c4ce213bf1c37c",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/glm5_mqa_logits_module_perf.parquet": "7779632bc386abe474103b48b7066cc3a41e133ea97a2e6c216e75bcb0763c00",
+    "systems/data/h200_sxm/sparse_attention/sglang/0.5.14/glm5_topk_module_perf.parquet": "425bed4d16f985728345146f0061bf6325ee8b170954d5eabfcad29f0b8af2d3",
+    "systems/data/h200_sxm/sparse_attention/trtllm/1.3.0rc20/collection_meta.yaml": "e0229dd30f67473c9cef1c1dae000ec2e2966a518f0f7d30374ac9ad143739cc",
+    "systems/data/h200_sxm/sparse_attention/trtllm/1.3.0rc20/dsa_context_module_perf.parquet": "305fcf62f30df234e8ade144ae406e280d2ef4966969b99347b7b806905d7317",
+    "systems/data/h200_sxm/sparse_attention/trtllm/1.3.0rc20/dsa_generation_module_perf.parquet": "2621e5e779f99e8220c09b824897bf4b7daaee6d09bb8d8d87dee599b62e4dea",
+    "systems/data/h200_sxm/sparse_attention/trtllm/1.3.0rc23/collection_meta.yaml": "d1bf6e0e80c994723774e0567c13e0ad215e34e3ddd71cb2af2346c8bb699bd3",
+    "systems/data/h200_sxm/sparse_attention/trtllm/1.3.0rc23/dsa_context_module_perf.parquet": "0635a76832e472069986e96126da5a33791599234185a51faf93908a3d691752",
+    "systems/data/h200_sxm/sparse_attention/trtllm/1.3.0rc23/dsa_generation_module_perf.parquet": "c871ae69c0e0a4a5770bd84438648d5182959109854c47977bba73ecb9c08854",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/collection_meta.yaml": "50d203450efd9cdd0e9285cfd5b260cfdfa6a774f93739bf8421fa3f2e7c8a58",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsa_context_module_perf.parquet": "c7b85b19d6be8b2b6f84c679cc2812267fd9b4e4ce599077b909810bab778837",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsa_generation_module_perf.parquet": "09c08d94250a3e8c5536cbb22f35731eaa212ebf8ea9795bceaa3ed22ee7c154",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsv4_csa_context_module_perf.parquet": "296ba02972de191e61fb6f7a5a915cd011f8f5556798ab5a7194b68e0c46b1dd",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsv4_csa_generation_module_perf.parquet": "e0f338dc0505c0eb1d43b3839f59fe1364874e18cc8f077da365c06e24ecab02",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsv4_hca_attn_module_perf.parquet": "4f6554104a9209c0ef0784ac60b3650573553622006c4cd463245dc4b8c705eb",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsv4_hca_context_module_perf.parquet": "9f66b5b2af54d43944d6340f5af52ffc23d1bfd26d5b59f25738104ecc5d2a08",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsv4_hca_generation_module_perf.parquet": "e5600790b47c52039497e6b7e47c8c085facc9336e3d0bb89aa02bf4d99059a9",
+    "systems/data/h200_sxm/sparse_attention/vllm/0.24.0/dsv4_paged_mqa_logits_module_perf.parquet": "a8379bd5326f002da8c7546dafe586f2f670e12830b8d19e88a5a694fc0974b3",
+    "systems/data/h200_sxm/vllm/0.25.1/fpm_forward_perf.metadata.json": "0dced0c407abc72d0c45f4d2d3fd2c4edbde312a171da94415bf532d24876f47",
+    "systems/data/h200_sxm/vllm/0.25.1/fpm_forward_perf.parquet": "de18df7a6ac34592d8e751d820c6e464eff6195924b5d9ed49ecb4fd43dac260",
+    "model_configs/Qwen--Qwen3-235B-A22B-FP8_config.json": "f666a1099576294bf252b16a899d415425663ed1930b1482967ddd30b085bbc4"
+  },
+  "cases": [
+    {
+      "id": "decode-conservative",
+      "overrides": {},
+      "metrics": {
+        "tpot": 37.623
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ]
+    },
+    {
+      "id": "decode-optimistic",
+      "overrides": {
+        "pipeline_model": "optimistic"
+      },
+      "metrics": {
+        "tpot": 31.819
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "optimistic",
+        "comm_hidden": true,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ]
+    },
+    {
+      "id": "decode-serial",
+      "overrides": {
+        "pipeline_model": "serial"
+      },
+      "metrics": {
+        "tpot": 71.29
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "serial",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ]
+    },
+    {
+      "id": "uneven-microbatch",
+      "overrides": {
+        "batch_size": 7,
+        "a_batch_size": 7
+      },
+      "metrics": {
+        "tpot": 42.919
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 3,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ]
+    },
+    {
+      "id": "optimistic-fallback",
+      "overrides": {
+        "pipeline_model": "optimistic",
+        "num_microbatches": 2
+      },
+      "metrics": {
+        "tpot": 28.656
+      },
+      "path": {
+        "phase": "decode",
+        "pipeline_model": "optimistic",
+        "comm_hidden": false,
+        "(a)micro_bs": 3,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "decode"
+      ]
+    },
+    {
+      "id": "prefill",
+      "overrides": {
+        "afd_phase": "prefill"
+      },
+      "metrics": {
+        "ttft": 5084.797
+      },
+      "path": {
+        "phase": "prefill",
+        "pipeline_model": "conservative",
+        "comm_hidden": false,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "prefill"
+      ]
+    },
+    {
+      "id": "both",
+      "overrides": {
+        "afd_phase": "both"
+      },
+      "metrics": {
+        "ttft": 5084.797,
+        "tpot": 37.623
+      },
+      "path": {
+        "phase": "both",
+        "pipeline_model": "conservative",
+        "comm_hidden": null,
+        "(a)micro_bs": 2,
+        "(a)workers": 8,
+        "(f)tp": 8,
+        "(f)ep": 8
+      },
+      "phases": [
+        "prefill",
+        "decode"
+      ]
+    },
+    {
+      "id": "invalid-pipeline",
+      "overrides": {
+        "pipeline_model": "invalid"
+      },
+      "error": {
+        "type": "ValueError",
+        "match": "pipeline_model must be one of",
+        "origin": "__post_init__"
+      }
+    },
+    {
+      "id": "invalid-combined-both",
+      "overrides": {
+        "afd_phase": "both",
+        "afd_combined_with_pd": true
+      },
+      "error": {
+        "type": "ValueError",
+        "match": "incompatible with afd_phase",
+        "origin": "cli_estimate"
+      }
+    }
+  ]
+}

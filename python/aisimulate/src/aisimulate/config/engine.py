@@ -84,9 +84,19 @@ class ParallelismPresetConfig(StrictModel):
     attention_data: PositiveInt = 1
     moe_tensor: PositiveInt = 1
     moe_expert: PositiveInt = 1
+    # Prefill context parallelism (SGLang ``--attn-cp-size`` / vLLM ``-pcp``):
+    # splits prefill tokens across extra attention ranks; decode stays replicated
+    # on them. Widens the worker like attention_data does. ``None`` (not
+    # requested) means 1 and keeps default dumps free of the CP knobs.
+    prefill_context: Annotated[int, Field(strict=True, gt=0)] | None = None
 
 
 class ParallelismPredictionConfig(ParallelismPresetConfig):
+    # Decode context parallelism (vLLM ``-dcp`` / SGLang ``--dcp-size``): stripes the
+    # decode KV cache across ranks that already belong to the attention group, so it
+    # adds no GPUs. ``None`` (not requested) is priced as 1 but keeps the FPM cell
+    # identity on unrecorded-DCP profiles; an explicit 1 selects recorded-DCP1
+    # profiles. Aggregated workers accept at most one of the two knobs above 1.
     decode_context: Annotated[int, Field(strict=True, gt=0)] | None = None
 
 
@@ -608,13 +618,17 @@ class ParallelismRecommendationConfig(StrictModel):
             "moe_tensor",
             "moe_expert",
         }
+        # The context-parallel knobs are not searched by recommend, but a
+        # ParallelismPredictionConfig round-tripped through model_dump carries
+        # them; accept them here and let recommend reject values above 1.
+        optional = {"prefill_context", "decode_context"}
         if not preset:
             raise ValueError("parallelism preset list must be nonempty")
         for index, entry in enumerate(preset):
             if not isinstance(entry, dict):
                 raise ValueError(f"parallelism preset entry {index} must be a mapping")
             missing = required - set(entry)
-            unknown = set(entry) - required
+            unknown = set(entry) - required - optional
             if missing or unknown:
                 raise ValueError(
                     "parallelism preset entries must cover exactly all knobs; "

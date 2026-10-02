@@ -969,6 +969,26 @@ def test_forward_pass_constructor_passes_complete_typed_request(monkeypatch, reb
     assert not hasattr(rust_engine_step.RustForwardPassPerfModel, "from_regression")
 
 
+def test_forward_pass_config_carries_context_parallel_knobs_through_rust_normalization() -> None:
+    import aisimulate_core
+    from aisimulate_core.sdk import ForwardPassPerfModelConfig
+
+    plain = ForwardPassPerfModelConfig(model="m", system="s", backend="vllm", worker_type="decode")
+    assert (plain.cp_size, plain.dcp) == (None, None)
+    normalized = json.loads(aisimulate_core.RustForwardPassPerfModel.normalize_config(json.dumps(plain.to_dict())))
+    # Unset prefill CP never enters the serialized identity (pre-CP configs stay
+    # byte-identical); unrecorded decode CP serializes as the canonical null.
+    assert "cp_size" not in normalized and normalized.get("dcp") is None
+
+    striped = ForwardPassPerfModelConfig(
+        model="m", system="s", backend="vllm", worker_type="decode", tp=8, cp_size=2, dcp=4
+    )
+    payload = striped.to_dict()
+    assert (payload["cp_size"], payload["dcp"]) == (2, 4)
+    normalized = json.loads(aisimulate_core.RustForwardPassPerfModel.normalize_config(json.dumps(payload)))
+    assert (normalized["cp_size"], normalized["dcp"]) == (2, 4)
+
+
 def test_forward_pass_config_requires_role_and_defaults_to_auto_deny() -> None:
     from aisimulate_core.sdk import ForwardPassPerfModelConfig
 
@@ -1034,6 +1054,7 @@ def test_forward_pass_config_preserves_existing_positional_arguments(tmp_path: P
         "dcp": None,
         "fpm_fmha_quant_mode": None,
         "moe_kernel_source": None,
+        "cp_size": None,
     }
 
     source = " source_with_spaces "
@@ -1044,6 +1065,7 @@ def test_forward_pass_config_preserves_existing_positional_arguments(tmp_path: P
         "dcp": None,
         "fpm_fmha_quant_mode": None,
         "moe_kernel_source": source,
+        "cp_size": None,
     }
     assert json.loads(json.dumps(pinned.to_dict()))["moe_kernel_source"] == source
 
@@ -2403,3 +2425,36 @@ def test_canonical_native_selection_retries_roots_and_pins_effective_configurati
     assert resolved["transfer_policy"] == ["xshape"]
     assert resolved["estimator_config"]["correction"]["enabled"] is False
     assert config.systems_paths == (str(tmp_path), packaged)
+
+
+@pytest.mark.parametrize(
+    ("variant_a", "variant_b"),
+    [
+        ({"dcp_comm": "ag_rs"}, {"dcp_comm": "a2a"}),
+        ({"dcp_comm": "a2a", "dcp_q_replicate": False}, {"dcp_comm": "a2a", "dcp_q_replicate": True}),
+        ({}, {"dcp_comm": "a2a"}),
+    ],
+)
+def test_engine_config_json_separates_dcp_op_shaping_overrides(variant_a, variant_b) -> None:
+    """``dcp_comm`` / ``dcp_q_replicate`` select different DCP op graphs for one
+    (tp, dcp) identity; the cache key must not let a warm ``ag_rs`` handle answer
+    an ``a2a`` request (or vice versa, whichever compiled first)."""
+
+    def _model(**dcp_overrides):
+        return SimpleNamespace(
+            model_path="deepseek-ai/DeepSeek-V3",
+            architecture="DeepseekV3ForCausalLM",
+            config=ModelConfig(
+                tp_size=8, pp_size=1, attention_dp_size=1, moe_tp_size=8, moe_ep_size=1, dcp_size=4, **dcp_overrides
+            ),
+        )
+
+    database = SimpleNamespace(system="b200_sxm", backend="vllm", version="0.24.0")
+    key_a = rust_engine_step._engine_config_json(_model(**variant_a), database)
+    key_b = rust_engine_step._engine_config_json(_model(**variant_b), database)
+    assert key_a != key_b
+    identity = json.loads(json.loads(key_b)["extra"]["identity"])["model_config"]
+    assert identity["dcp_comm"] == variant_b.get("dcp_comm")
+    assert identity["dcp_q_replicate"] == variant_b.get("dcp_q_replicate")
+    # Same overrides -> same key (the memo still hits).
+    assert rust_engine_step._engine_config_json(_model(**variant_b), database) == key_b

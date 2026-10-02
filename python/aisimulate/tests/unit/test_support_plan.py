@@ -202,6 +202,7 @@ def test_plan_does_not_resolve_unknown_model_and_reloads_public_configs(tmp_path
         "attention_data": 1,
         "moe_tensor": 4,
         "moe_expert": 1,
+        "prefill_context": None,
         "decode_context": None,
     }
     assert recommendation.engine.workers.aggregated.timing.estimation_mode == "fpm_interpolation"

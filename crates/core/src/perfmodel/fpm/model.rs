@@ -376,9 +376,13 @@ impl ForwardPassPerfModel {
                 last_error = Some(error);
                 continue;
             }
+            // Op-level DCP is priced by the sharded attention ops and their
+            // collectives; the whole-forward paths need a measured vLLM cell
+            // (the regression tables carry no DCP column).
             if config.dcp.is_some_and(|dcp| dcp > 1)
-                && (mode != EstimationMode::FpmInterpolation
-                    || config.backend != crate::BackendKind::Vllm)
+                && (mode == EstimationMode::FpmRegression
+                    || (mode == EstimationMode::FpmInterpolation
+                        && config.backend != crate::BackendKind::Vllm))
             {
                 let error = AicError::UnsupportedModel(
                     "DCP timing requires measured vLLM FPM interpolation".into(),
@@ -452,8 +456,17 @@ impl ForwardPassPerfModel {
                 Err(err) => return Err(err),
             }
         }
-        Err(last_error
-            .unwrap_or_else(|| AicError::UnsupportedModel("no estimator candidates".into())))
+        // Every candidate mode failed. Surface all of them: the last one is
+        // usually a whole-forward gate (for instance the DCP FPM rule) that
+        // would otherwise mask the op-level reason the user actually hit.
+        Err(match failures.len() {
+            0 => AicError::UnsupportedModel("no estimator candidates".into()),
+            1 => last_error.expect("one recorded failure"),
+            _ => AicError::UnsupportedModel(format!(
+                "no estimator mode accepted this configuration: {}",
+                failures.join("; ")
+            )),
+        })
     }
 
     /// API:

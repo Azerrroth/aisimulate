@@ -91,6 +91,8 @@ _AIC_TIMING_FIELD_ALIASES = {
     "pp": ("aic_pp_size",),
     "moe_tp_size": ("moe_tp_size", "aic_moe_tp_size"),
     "moe_ep_size": ("moe_ep_size", "aic_moe_ep_size"),
+    "cp_size": ("cp_size", "aic_cp_size"),
+    "dcp": ("dcp", "dcp_size", "aic_dcp_size"),
     "gemm_dtype": ("gemm_dtype", "aic_gemm_dtype"),
     "moe_dtype": ("moe_dtype", "aic_moe_dtype"),
     "fmha_dtype": ("fmha_dtype", "aic_fmha_dtype"),
@@ -1191,7 +1193,7 @@ def _pop_aic_timing_overrides(rank: dict[str, JSONValue], role: str) -> dict[str
         value = rank.pop(configured[0])
         if target == "decode_workload_distribution" and value is None:
             continue
-        if target in {"pp", "moe_tp_size", "moe_ep_size", "wideep_num_slots"}:
+        if target in {"pp", "moe_tp_size", "moe_ep_size", "wideep_num_slots", "cp_size", "dcp"}:
             value = _positive_int(value, f"engine provider {role} {target}")
         elif target == "fpm_profile":
             from aisimulate_core.sdk.fpm_profile import load_fpm_profile
@@ -1376,6 +1378,11 @@ def _materialize_engine_role(
         memory_diagnostics[role] = role_memory
     capacity_materialized = False
     num_gpu_blocks_is_explicit = False
+    # A nested canonical timing config carries the CP knobs too; check them
+    # against parallel_config BEFORE capacity materialization resolves them
+    # into AIC inputs, so a mismatch cannot size the KV cache for one topology
+    # while the deployment reports another.
+    _require_nested_context_parallel_match(role_config, parallel_config, role)
     if "rank" not in role_config:
         state_cache = _manual_state_cache(role_config, deployment_backend, role)
         num_gpu_blocks_is_explicit = role_config.get("num_gpu_blocks") is not None
@@ -1563,6 +1570,16 @@ def _materialize_engine_role(
             memory_fraction_overrides[memory_field] = float(value)
 
     aic_timing_overrides = _pop_aic_timing_overrides(rank, role)
+    for target in ("cp_size", "dcp"):
+        if target in aic_timing_overrides:
+            # Same contract as tp / attention_dp: a directly supplied deployment
+            # must not price one CP topology while parallel_config reports another.
+            _require_parallel_match(
+                parallel_config,
+                f"{parallel_prefix}{'cp' if target == 'cp_size' else 'dcp'}",
+                aic_timing_overrides[target],
+                f"engine provider {role} {target}",
+            )
 
     timing_model = rank.get("timing_model")
     uses_aic_timing = timing_model is None or (
@@ -1780,12 +1797,43 @@ def _materialize_engine_role(
             timing_model["config"] = timing_config
             rank["timing_model"] = timing_model
 
+    host_offload = rank.get("native_host_offload")
+    if (
+        nested_rank is None
+        and isinstance(host_offload, dict)
+        and host_offload.get("scope") == "cluster_shared"
+        and host_offload.get("kv_layout_id") is None
+    ):
+        rank["native_host_offload"] = {**host_offload, "kv_layout_id": _kv_layout_id(rank, model, tensor_parallel_size)}
+
     return {
         "dp_size": dp_size,
         "tensor_parallel_size": tensor_parallel_size,
         "num_gpu_blocks_is_explicit": num_gpu_blocks_is_explicit,
         "rank": rank,
     }
+
+
+def _kv_layout_id(rank: Mapping[str, JSONValue], model: JSONValue, tensor_parallel_size: int) -> str:
+    """Identity of stored KV bytes: ranks may share a G2 pool only when equal.
+
+    Uses the resolved timing identity, so per-worker quantization and attention
+    backend overrides, DCP and the canonical backend version all participate.
+    """
+    timing = rank.get("timing_model")
+    config = timing.get("config", {}) if isinstance(timing, dict) else {}
+    identity = {
+        "model": config.get("model", model),
+        "backend": rank["backend"],
+        "tp": config.get("tp", tensor_parallel_size),
+        "block_size": rank.get("block_size"),
+        "bytes_per_token": rank.get("kv_cache_bytes_per_token"),
+        **{
+            name: config.get(name)
+            for name in ("backend_version", "pp", "dcp", "kvcache_quant_mode", "attention_backend")
+        },
+    }
+    return json.dumps({k: v for k, v in identity.items() if v is not None}, sort_keys=True, separators=(",", ":"))
 
 
 def _manual_state_cache(rank: Mapping[str, JSONValue], backend: str, role: str) -> StateCacheConfig | None:
@@ -1888,6 +1936,37 @@ def _sample_synthetic_lengths(
     if isinstance(rng, np.random.RandomState):
         return rng.randint(lower, upper + 1, size=count).tolist()
     return [rng.randint(lower, upper) for _ in range(count)]
+
+
+def _require_nested_context_parallel_match(
+    role_config: Mapping[str, JSONValue],
+    parallel_config: Mapping[str, JSONValue],
+    role: str,
+) -> None:
+    """Reject ``timing_model.config.cp_size/dcp`` that disagree with ``parallel_config``.
+
+    The timing model may sit at the top level (flat CLI/Sweeper form) or under
+    the nested ``rank`` descriptor (execution-level input); both are checked.
+    """
+    rank_config = role_config.get("rank")
+    timing_source: Mapping[str, JSONValue] = rank_config if isinstance(rank_config, Mapping) else role_config
+    timing = timing_source.get("timing_model")
+    if not isinstance(timing, dict) or timing.get("type") != "external" or timing.get("provider") != "aic":
+        return
+    nested = timing.get("config")
+    if not isinstance(nested, dict):
+        return
+    prefix = "" if role == "aggregated" else f"{role}_"
+    for target, parallel_field in (("cp_size", "cp"), ("dcp", "dcp")):
+        value = nested.get(target)
+        if value is None:
+            continue
+        _require_parallel_match(
+            parallel_config,
+            f"{prefix}{parallel_field}",
+            _positive_int(value, f"engine provider {role} timing_model.config.{target}"),
+            f"engine provider {role} timing_model.config.{target}",
+        )
 
 
 def _require_parallel_match(

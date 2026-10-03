@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::engine::common::hashing::{
-    BlockHash, SequenceHash, XXH3_SEED, compute_block_hash_for_tokens, compute_next_sequence_hash,
+    BlockHash, SequenceHash, XXH3_SEED, block_hashes, compute_block_hash_for_tokens,
+    compute_next_sequence_hash,
 };
 use rand::random;
 use uuid::Uuid;
@@ -155,22 +156,23 @@ impl RequestSequence {
         let retain_local_hashes = retain_local_hashes && enable_prefix_caching;
 
         let mut identities = Vec::with_capacity(completion_blocks);
-        let mut parent_hash = None;
-        for block in tokens.chunks_exact(block_size) {
-            let (sequence_hash, local_hash) = if enable_prefix_caching {
-                let local_hash = compute_block_hash_for_tokens(block, XXH3_SEED);
+        if enable_prefix_caching {
+            let mut parent_hash = None;
+            for local_hash in block_hashes(&tokens, block_size) {
                 let sequence_hash = parent_hash
                     .map(|parent| compute_next_sequence_hash(parent, local_hash))
                     .unwrap_or(local_hash);
-                (sequence_hash, retain_local_hashes.then_some(local_hash))
-            } else {
-                (random::<u64>(), None)
-            };
-            identities.push(BlockIdentity {
-                sequence_hash: Some(sequence_hash),
-                local_hash,
-            });
-            parent_hash = Some(sequence_hash);
+                identities.push(BlockIdentity {
+                    sequence_hash: Some(sequence_hash),
+                    local_hash: retain_local_hashes.then_some(local_hash),
+                });
+                parent_hash = Some(sequence_hash);
+            }
+        } else {
+            identities.extend((0..num_input_tokens / block_size).map(|_| BlockIdentity {
+                sequence_hash: Some(random::<u64>()),
+                local_hash: None,
+            }));
         }
         if !tokens.len().is_multiple_of(block_size) {
             identities.push(BlockIdentity::partial());
@@ -330,6 +332,7 @@ impl RequestSequence {
     pub(crate) fn debug_assert_finalized_range(
         &self,
         identity_count: usize,
+        computed_tokens: usize,
         finalized: impl IntoIterator<Item = BlockIdentity>,
         final_identity: Option<BlockIdentity>,
     ) {
@@ -340,10 +343,17 @@ impl RequestSequence {
                 .all(|identity| identity.sequence_hash.is_some()),
             "finalized native blocks must have sequence hashes"
         );
+        // Prompt blocks are resolved at creation. A generated token that fills
+        // the final block leaves it unresolved until the block is computed, and
+        // the chunked recompute of a preempted request finalizes earlier blocks
+        // first.
         let aligned = self.len().is_multiple_of(self.block_size);
+        let uncomputed_output = self.generated_tokens > 0 && computed_tokens < self.len();
         debug_assert!(
-            final_identity.is_none_or(|identity| identity.sequence_hash.is_some() || !aligned),
-            "only an unaligned final native block may be partial"
+            final_identity.is_none_or(|identity| {
+                identity.sequence_hash.is_some() || !aligned || uncomputed_output
+            }),
+            "only an unaligned or uncomputed output final native block may be partial"
         );
         self.debug_assert_storage_invariants();
     }
@@ -424,6 +434,33 @@ mod tests {
             "the first token in the next block needs a new lease entry"
         );
         assert_eq!(sequence.current_known_blocks(), 2);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    fn an_aligned_final_block_stays_partial_only_while_its_output_is_uncomputed() {
+        let rejects = |sequence: &RequestSequence, computed: usize| {
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                sequence.debug_assert_finalized_range(
+                    1,
+                    computed,
+                    [],
+                    Some(BlockIdentity::partial()),
+                )
+            }))
+            .is_err()
+        };
+        // Three prompt tokens plus one output token fill block 0.
+        let (mut output, _) = sequence(vec![0, 1, 2], 2, false, false, None);
+        output.generate_token();
+        assert!(
+            !rejects(&output, 3),
+            "a chunked recompute may stop before it"
+        );
+        assert!(rejects(&output, 4), "a computed full block must be hashed");
+        // Prompt blocks are hashed at creation, computed or not.
+        let (prompt, _) = sequence(vec![0, 1, 2, 3], 1, false, false, None);
+        assert!(rejects(&prompt, 2));
     }
 
     #[test]

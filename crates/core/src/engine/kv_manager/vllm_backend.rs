@@ -18,12 +18,12 @@ use crate::engine::cache::vllm_block_pool::{
     BlockCopyId, BlockReservation, CacheKey, ReserveOutcome, VllmBlockPool,
 };
 use crate::engine::common::hashing::{
-    BlockHash, SequenceHash, XXH3_SEED, compute_block_hash_for_tokens, compute_next_sequence_hash,
+    BlockHash, SequenceHash, block_hashes, compute_next_sequence_hash,
 };
 use crate::engine::common::kv_cache_trace;
 use crate::engine::common::protocols::{KvEventPublishers, PrefillCost, SchedulingPolicy};
 use crate::engine::common::sequence::{BlockIdentity, RequestSequence};
-use crate::engine::{KvBlock, KvEvent, KvEventData, StoredBlocks};
+use crate::engine::{KvBlock, KvEvent, KvEventData, KvEventTier, StoredBlocks};
 
 /// Apply vLLM's EAGLE/MTP prefix-cache rule.
 ///
@@ -159,10 +159,8 @@ impl BlockRequestLease {
 
     pub(crate) fn configure_prefix_hashes(&mut self, tokens: &[u32], unit: usize) {
         let mut parent = None;
-        let hashes = tokens
-            .chunks_exact(unit)
-            .map(|chunk| {
-                let local = compute_block_hash_for_tokens(chunk, XXH3_SEED);
+        let hashes = block_hashes(tokens, unit)
+            .map(|local| {
                 let hash = parent
                     .map(|p| compute_next_sequence_hash(p, local))
                     .unwrap_or(local);
@@ -223,6 +221,12 @@ impl BlockRequestLease {
         self.entries
             .get(block_index)
             .and_then(|entry| entry.identity.sequence_hash)
+    }
+
+    pub(crate) fn local_hash(&self, block_index: usize) -> Option<BlockHash> {
+        self.entries
+            .get(block_index)
+            .and_then(|entry| entry.identity.local_hash)
     }
 
     #[cfg(test)]
@@ -380,6 +384,12 @@ impl VllmKvManager {
 
     pub(crate) fn set_belady_oracle(&mut self, oracle: BeladyOracle) {
         self.pool.set_belady_oracle(oracle);
+    }
+
+    /// Hold store sources until their transfer completes instead of fencing
+    /// the next owner's write.
+    pub(crate) fn hold_store_sources(&mut self) {
+        self.pool.hold_pending_sources();
     }
 
     pub(crate) fn new_with_event_sink(
@@ -1056,6 +1066,7 @@ impl VllmKvManager {
         #[cfg(debug_assertions)]
         sequence.debug_assert_finalized_range(
             lease.entries.len(),
+            computed_after,
             lease.entries[first_new_block..completed_blocks]
                 .iter()
                 .map(|entry| entry.identity),
@@ -1680,20 +1691,34 @@ impl VllmKvManager {
                 block_hashes: full_blocks,
             }
         };
+        self.publish_event(data, KvEventTier::Device, token_ids.as_deref());
+    }
+
+    /// Relay a cluster-shared G2 residency change in this rank's event order.
+    pub(crate) fn publish_host_pinned_event(&mut self, data: KvEventData) {
+        if !self.kv_event_publishers.is_empty() {
+            self.publish_event(data, KvEventTier::HostPinned, None);
+        }
+    }
+
+    fn publish_event(
+        &mut self,
+        data: KvEventData,
+        tier: KvEventTier,
+        token_ids: Option<&[Vec<u32>]>,
+    ) {
         let event = KvEvent {
             event_id: self.next_event_id,
             data,
             dp_rank: self.dp_rank,
+            tier,
         };
         self.next_event_id = self
             .next_event_id
             .checked_add(1)
             .unwrap_or_else(|| panic!("KV event ID overflow"));
-        if let Err(error) = self
-            .kv_event_publishers
-            .publish(event, token_ids.as_deref())
-        {
-            tracing::warn!(error = %error, "failed to publish native G1 KV event");
+        if let Err(error) = self.kv_event_publishers.publish(event, token_ids) {
+            tracing::warn!(error = %error, "failed to publish native KV event");
         }
     }
 
